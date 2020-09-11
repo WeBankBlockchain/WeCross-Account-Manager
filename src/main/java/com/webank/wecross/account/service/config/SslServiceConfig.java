@@ -7,9 +7,9 @@ import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.X509Certificate;
-import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.SslStoreProvider;
@@ -21,18 +21,18 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 public class SslServiceConfig {
     private static Logger logger = LoggerFactory.getLogger(SslServiceConfig.class);
 
-    @Resource ApplicationConfig applicationConfig;
+    @Autowired ApplicationConfig applicationConfig;
 
     @Bean
     public TomcatServletWebServerFactory newTomcatServletWebServerFactory() {
 
-        String address = applicationConfig.getConfigFile().service.address;
-        int port = applicationConfig.getConfigFile().service.port;
-        boolean sslOn = applicationConfig.getConfigFile().service.sslOn;
+        String address = applicationConfig.service.address;
+        int port = applicationConfig.service.port;
+        boolean sslOn = applicationConfig.service.sslOn;
 
         System.out.println(
                 "Initializing TomcatServletWebServerFactory: "
-                        + applicationConfig.getConfigFile().service.toString());
+                        + applicationConfig.service.toString());
 
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
 
@@ -52,9 +52,9 @@ public class SslServiceConfig {
     }
 
     private void setupSslService(TomcatServletWebServerFactory factory) throws Exception {
-        String sslKey = applicationConfig.getConfigFile().service.sslKey;
-        String sslCert = applicationConfig.getConfigFile().service.sslCert;
-        String caCert = applicationConfig.getConfigFile().service.caCert;
+        String sslKey = applicationConfig.service.sslKey;
+        String sslCert = applicationConfig.service.sslCert;
+        String caCert = applicationConfig.service.caCert;
 
         Ssl ssl = new Ssl();
         ssl.setClientAuth(Ssl.ClientAuth.NEED);

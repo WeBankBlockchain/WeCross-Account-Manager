@@ -7,6 +7,6 @@ public class AccountManagerException extends Exception {
 
     @Override
     public String getMessage() {
-        return "(" + this.getClass().getSimpleName() + ")" + super.getMessage();
+        return "(" + this.getClass().getSimpleName() + "):" + super.getMessage();
     }
 }

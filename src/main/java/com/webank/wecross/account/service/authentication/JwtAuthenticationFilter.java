@@ -5,6 +5,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.webank.wecross.account.service.account.UAManager;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -12,11 +14,13 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
     public static final String TOKEN_HEADER = "Authorization";
 
     private JwtManager jwtManager;
+    private UAManager uaManager;
 
     public JwtAuthenticationFilter(
-            AuthenticationManager authenticationManager, JwtManager jwtManager) {
+            AuthenticationManager authenticationManager, JwtManager jwtManager, UAManager uaManager) {
         super(authenticationManager);
         this.jwtManager = jwtManager;
+        this.uaManager = uaManager;
     }
 
     @Override
@@ -26,12 +30,14 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
         String tokenStringWithPrefix = request.getHeader(TOKEN_HEADER);
         try {
             if (!isJwtTokenWithPrefix(tokenStringWithPrefix)) {
-                throw new Exception("Please login and use token to access");
+                throw new Exception("Please login and use credential to access");
             }
-            jwtManager.verify(tokenStringWithPrefix);
+            JwtToken token = jwtManager.verifyAnddecode(tokenStringWithPrefix);
 
+            jwtManager.setCurrentLoginToken(token);
+            uaManager.setCurrentLoginUA(token.getAudience());
             // OK!
-            chain.doFilter(request, response);
+            chain.doFilter(request, response); // call restful API
 
         } catch (Exception e) {
             responseError(response, "Token authenticate failed: " + e.getMessage());
@@ -56,5 +62,13 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
         } else {
             return false;
         }
+    }
+
+    public void setJwtManager(JwtManager jwtManager) {
+        this.jwtManager = jwtManager;
+    }
+
+    public void setUaManager(UAManager uaManager) {
+        this.uaManager = uaManager;
     }
 }
