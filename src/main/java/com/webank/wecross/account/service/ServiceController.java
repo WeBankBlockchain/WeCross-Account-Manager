@@ -9,9 +9,6 @@ import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountFactory;
 import com.webank.wecross.account.service.authentication.JwtManager;
-
-import javax.annotation.Resource;
-
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
@@ -23,13 +20,11 @@ import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
 import com.webank.wecross.account.service.exception.RegisterException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
+import javax.annotation.Resource;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.LinkedList;
-import java.util.List;
 
 @RestController
 public class ServiceController {
@@ -39,8 +34,7 @@ public class ServiceController {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Resource
-    ServiceContext serviceContext;
+    @Resource ServiceContext serviceContext;
 
     @RequestMapping("/test")
     private Object test() {
@@ -73,9 +67,9 @@ public class ServiceController {
 
         UAManager uaManager = serviceContext.getUaManager();
         if (uaManager.isUAExist(request.getUsername())) {
-            throw new RegisterException("user '" + request.getUsername() + "' has already been registered");
+            throw new RegisterException(
+                    "user '" + request.getUsername() + "' has already been registered");
         }
-
     }
 
     @RequestMapping(
@@ -87,8 +81,8 @@ public class ServiceController {
         RestResponse restResponse;
         try {
             restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<RegisterRequest>>() {
-                    });
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<RegisterRequest>>() {});
         } catch (Exception e) {
             restResponse = RestResponse.newFailed(e.getMessage());
             return restResponse;
@@ -108,12 +102,18 @@ public class ServiceController {
 
             uaManager.setUA(newUA);
 
-            RegisterResponse registerResponse = RegisterResponse.builder().errorCode(0).message("success").build();
+            RegisterResponse registerResponse =
+                    RegisterResponse.builder()
+                            .errorCode(0)
+                            .universalAccount(newUA.toInfo())
+                            .message("success")
+                            .build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(registerResponse);
 
         } catch (Exception e) {
-            RegisterResponse registerResponse = RegisterResponse.builder().errorCode(1).message(e.getMessage()).build();
+            RegisterResponse registerResponse =
+                    RegisterResponse.builder().errorCode(1).message(e.getMessage()).build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(registerResponse);
         }
@@ -131,17 +131,26 @@ public class ServiceController {
             String tokenStr = jwtManager.getCurrentLoginToken().getTokenStr();
             jwtManager.setLogoutToken(tokenStr);
 
-            logoutResponse = LogoutResponse.builder().errorCode(LogoutResponse.SUCCESS).message("success").build();
+            logoutResponse =
+                    LogoutResponse.builder()
+                            .errorCode(LogoutResponse.SUCCESS)
+                            .message("success")
+                            .build();
 
         } catch (AccountManagerException e) {
-            logoutResponse = LogoutResponse.builder().errorCode(LogoutResponse.ERROR).message(e.getMessage()).build();
+            logoutResponse =
+                    LogoutResponse.builder()
+                            .errorCode(LogoutResponse.ERROR)
+                            .message(e.getMessage())
+                            .build();
         }
         RestResponse restResponse = RestResponse.newSuccess();
         restResponse.setData(logoutResponse);
         return restResponse;
     }
 
-    private void checkAddChainAccountRequest(AddChainAccountRequest request) throws AccountManagerException {
+    private void checkAddChainAccountRequest(AddChainAccountRequest request)
+            throws AccountManagerException {
         if (request.getType() == null) {
             throw new AddChainAccountException("type has not given");
         }
@@ -168,8 +177,8 @@ public class ServiceController {
         RestResponse restResponse;
         try {
             restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<AddChainAccountRequest>>() {
-                    });
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<AddChainAccountRequest>>() {});
         } catch (Exception e) {
             restResponse = RestResponse.newFailed(e.getMessage());
             return restResponse;
@@ -181,22 +190,26 @@ public class ServiceController {
             checkAddChainAccountRequest(addChainAccountRequest);
 
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
-            ChainAccount newChainAccount = ChainAccountBuilder.buildFromRequest(addChainAccountRequest, ua.getUsername());
+            ChainAccount newChainAccount =
+                    ChainAccountBuilder.buildFromRequest(addChainAccountRequest, ua.getUsername());
             ua.addChainAccount(newChainAccount);
             serviceContext.getUaManager().setUA(ua); // update to db
 
-            AddChainAccountResponse addChainAccountResponse = AddChainAccountResponse.builder().errorCode(0).message("success").build();
+            AddChainAccountResponse addChainAccountResponse =
+                    AddChainAccountResponse.builder().errorCode(0).message("success").build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(addChainAccountResponse);
         } catch (Exception e) {
-            AddChainAccountResponse addChainAccountResponse = AddChainAccountResponse.builder().errorCode(1).message(e.getMessage()).build();
+            AddChainAccountResponse addChainAccountResponse =
+                    AddChainAccountResponse.builder().errorCode(1).message(e.getMessage()).build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(addChainAccountResponse);
         }
         return restResponse;
     }
 
-    private void checkSetDefaultAccountRequest(SetDefaultAccountRequest request) throws SetChainAccountException {
+    private void checkSetDefaultAccountRequest(SetDefaultAccountRequest request)
+            throws SetChainAccountException {
         if (request.getType() == null) {
             throw new SetChainAccountException("type has not given");
         }
@@ -204,7 +217,6 @@ public class ServiceController {
         if (request.getKeyID() == null) {
             throw new SetChainAccountException("pubKey has not given");
         }
-
     }
 
     @RequestMapping(
@@ -216,8 +228,8 @@ public class ServiceController {
         RestResponse restResponse;
         try {
             restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<SetDefaultAccountRequest>>() {
-                    });
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<SetDefaultAccountRequest>>() {});
         } catch (Exception e) {
             restResponse = RestResponse.newFailed(e.getMessage());
             return restResponse;
@@ -238,18 +250,24 @@ public class ServiceController {
             }
 
             if (!chainAccount.getType().equals(type)) {
-                throw new SetChainAccountException("keyID " + keyID.intValue() + " of type " + type + " not found");
+                throw new SetChainAccountException(
+                        "keyID " + keyID.intValue() + " of type " + type + " not found");
             }
 
             chainAccount.setDefault(true); // set
             ua.setChainAccount(chainAccount); // set to ua
             serviceContext.getUaManager().setUA(ua); // update to db
 
-            SetDefaultAccountResponse setDefaultAccountResponse = SetDefaultAccountResponse.builder().errorCode(0).message("success").build();
+            SetDefaultAccountResponse setDefaultAccountResponse =
+                    SetDefaultAccountResponse.builder().errorCode(0).message("success").build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(setDefaultAccountResponse);
         } catch (Exception e) {
-            SetDefaultAccountResponse setDefaultAccountResponse = SetDefaultAccountResponse.builder().errorCode(1).message(e.getMessage()).build();
+            SetDefaultAccountResponse setDefaultAccountResponse =
+                    SetDefaultAccountResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(setDefaultAccountResponse);
         }
@@ -261,6 +279,15 @@ public class ServiceController {
         UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
         RestResponse response = RestResponse.newSuccess();
         response.setData(ua);
+
+        return response;
+    }
+
+    @RequestMapping(value = "/auth/getUniversalAccount")
+    private Object getAllAccounts() {
+        UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+        RestResponse response = RestResponse.newSuccess();
+        response.setData(ua.toDetails());
 
         return response;
     }

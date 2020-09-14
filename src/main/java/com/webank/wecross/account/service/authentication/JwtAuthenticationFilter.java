@@ -1,12 +1,11 @@
 package com.webank.wecross.account.service.authentication;
 
+import com.webank.wecross.account.service.account.UAManager;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.webank.wecross.account.service.account.UAManager;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -17,7 +16,9 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
     private UAManager uaManager;
 
     public JwtAuthenticationFilter(
-            AuthenticationManager authenticationManager, JwtManager jwtManager, UAManager uaManager) {
+            AuthenticationManager authenticationManager,
+            JwtManager jwtManager,
+            UAManager uaManager) {
         super(authenticationManager);
         this.jwtManager = jwtManager;
         this.uaManager = uaManager;

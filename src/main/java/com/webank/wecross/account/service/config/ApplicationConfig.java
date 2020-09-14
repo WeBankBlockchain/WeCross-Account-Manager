@@ -27,6 +27,7 @@ public class ApplicationConfig {
 
     public Service service;
     public Auth auth;
+    public DB db;
 
     public static ApplicationConfig parseFromFile(String filePath) throws ConfigurationException {
         Toml toml = FileUtility.readToml(filePath);
@@ -37,11 +38,12 @@ public class ApplicationConfig {
     public ApplicationConfig(Toml toml) throws ConfigurationException {
         this.service = new Service(toml);
         this.auth = new Auth(toml);
+        this.db = new DB(toml);
     }
 
     @Override
     public String toString() {
-        return "ApplicationConfig{" + "service=" + service + ", auth=" + auth + '}';
+        return "ApplicationConfig{" + "service=" + service + ", auth=" + auth + ", db=" + db + '}';
     }
 
     class Service {
@@ -111,6 +113,35 @@ public class ApplicationConfig {
                     + '\''
                     + ", expires="
                     + expires
+                    + '}';
+        }
+    }
+
+    class DB {
+        public String url;
+        public String username;
+        public String password;
+
+        DB(Toml toml) throws ConfigurationException {
+            this.url = parseString(toml, "db.url");
+            this.username = parseString(toml, "db.username");
+            this.password = parseString(toml, "db.password");
+
+            logger.info("Load configuration: " + this.toString());
+        }
+
+        @Override
+        public String toString() {
+            return "DB{"
+                    + "url='"
+                    + url
+                    + '\''
+                    + ", username='"
+                    + username
+                    + '\''
+                    + ", password='"
+                    + password
+                    + '\''
                     + '}';
         }
     }

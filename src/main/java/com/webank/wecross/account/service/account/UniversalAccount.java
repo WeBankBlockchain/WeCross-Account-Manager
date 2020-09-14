@@ -4,41 +4,32 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
-import jdk.nashorn.internal.objects.annotations.Getter;
-import jdk.nashorn.internal.objects.annotations.Setter;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
-
-import javax.swing.text.html.parser.Entity;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import jdk.nashorn.internal.objects.annotations.Getter;
+import jdk.nashorn.internal.objects.annotations.Setter;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
 public class UniversalAccount {
-    @JsonIgnore
-    private Integer id;
+    @JsonIgnore private Integer id;
 
     private String username;
     private String uaID;
     private String pubKey;
 
-    @JsonIgnore
-    private String password;
+    @JsonIgnore private String password;
 
-    @JsonIgnore
-    private String secKey;
+    @JsonIgnore private String secKey;
 
-    @JsonIgnore
-    private String role;
+    @JsonIgnore private String role;
 
-    @JsonIgnore
-    private Map<String, Map<Integer, ChainAccount>> type2ChainAccounts;
+    @JsonIgnore private Map<String, Map<Integer, ChainAccount>> type2ChainAccounts;
 
     @Setter
     public void setChainAccounts(List<ChainAccount> chainAccounts) {
@@ -105,8 +96,7 @@ public class UniversalAccount {
 
         Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
         for (ChainAccount ca : chainAccountMap.values()) {
-            if (ca.equals(chainAccount) )
-            {
+            if (ca.equals(chainAccount)) {
                 continue;
             }
 
@@ -116,7 +106,7 @@ public class UniversalAccount {
 
             if (ca.pubKey.equals(chainAccount.pubKey)) {
                 ca.username = chainAccount.username;
-                //ca.keyID = chainAccount.keyID;
+                // ca.keyID = chainAccount.keyID;
                 ca.type = chainAccount.type;
                 ca.isDefault = chainAccount.isDefault;
                 ca.pubKey = chainAccount.pubKey;
@@ -167,13 +157,47 @@ public class UniversalAccount {
         private String pubKey;
     }
 
-
     public Info toInfo() {
         Info info = new Info();
         info.setUsername(this.username);
         info.setUaID(this.uaID);
         info.setPubKey(this.pubKey);
         return info;
+    }
+
+    @Data
+    public class Details {
+        private String username;
+        private String uaID;
+        private String pubKey;
+        private String password;
+        private String secKey;
+        private String role;
+        private Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails;
+    }
+
+    public Details toDetails() {
+        Details details = new Details();
+        details.setUsername(username);
+        details.setUaID(uaID);
+        details.setPubKey(pubKey);
+        details.setPassword(password);
+        details.setSecKey(secKey);
+        details.setRole(role);
+
+        Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
+        for (Map.Entry<String, Map<Integer, ChainAccount>> t2cas : type2ChainAccounts.entrySet()) {
+            Map<Integer, ChainAccount.Details> chainAccountDetails = new HashMap<>();
+            String type = t2cas.getKey();
+            for (Map.Entry<Integer, ChainAccount> id2cas : t2cas.getValue().entrySet()) {
+                chainAccountDetails.putIfAbsent(id2cas.getKey(), id2cas.getValue().toDetails());
+            }
+            type2ChainAccountDetails.putIfAbsent(type, chainAccountDetails);
+        }
+
+        details.setType2ChainAccountDetails(type2ChainAccountDetails);
+
+        return details;
     }
 
     public UniversalAccountTableBean toTableBean() {

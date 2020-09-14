@@ -2,7 +2,6 @@ package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
-import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +10,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UAManagerConfig {
-    @Autowired
-    UniversalAccountTableJPA universalAccountTableJPA;
+    @Autowired UniversalAccountTableJPA universalAccountTableJPA;
 
-    @Autowired
-    ChainAccountTableJPA chainAccountTableJPA;
+    @Autowired ChainAccountTableJPA chainAccountTableJPA;
 
     @Bean
     public UAManager newUAManager() throws AccountManagerException {

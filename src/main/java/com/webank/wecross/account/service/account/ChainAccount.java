@@ -3,6 +3,8 @@ package com.webank.wecross.account.service.account;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
+import lombok.Builder;
+import lombok.Data;
 
 public class ChainAccount {
     private Integer id;
@@ -52,7 +54,7 @@ public class ChainAccount {
         isDefault = aDefault;
     }
 
-    @JsonGetter("UAProof")
+    @JsonIgnore
     public String getUAProof() {
         return UAProof;
     }
@@ -76,6 +78,38 @@ public class ChainAccount {
         tableBean.setExt2(ext2);
         tableBean.setExt3(ext3);
         return tableBean;
+    }
+
+    @Data
+    @Builder
+    public static class Details {
+        protected String username; // ua
+        protected Integer keyID;
+        protected String type;
+        protected boolean isDefault;
+        protected String pubKey;
+        protected String secKey;
+        protected String UAProof;
+        protected String ext0;
+        protected String ext1;
+        protected String ext2;
+        protected String ext3;
+    }
+
+    public Details toDetails() {
+        return Details.builder()
+                .username(username)
+                .keyID(keyID)
+                .type(type)
+                .isDefault(isDefault)
+                .pubKey(pubKey)
+                .secKey(secKey)
+                .UAProof(UAProof)
+                .ext0(ext0)
+                .ext1(ext1)
+                .ext2(ext2)
+                .ext3(ext3)
+                .build();
     }
 
     @JsonIgnore

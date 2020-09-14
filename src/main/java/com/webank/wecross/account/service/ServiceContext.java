@@ -1,12 +1,9 @@
 package com.webank.wecross.account.service;
 
 import com.webank.wecross.account.service.account.UAManager;
-import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.config.ServiceConfig;
 import lombok.Data;
-
-import javax.annotation.Resource;
 
 @Data
 public class ServiceContext {

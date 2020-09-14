@@ -6,17 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.account.service.RestRequest;
 import com.webank.wecross.account.service.RestResponse;
 import com.webank.wecross.account.service.account.UAManager;
-
+import com.webank.wecross.account.service.authentication.packet.LoginRequest;
+import com.webank.wecross.account.service.authentication.packet.LoginResponse;
+import com.webank.wecross.account.service.exception.AccountManagerException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.webank.wecross.account.service.authentication.packet.LoginRequest;
-import com.webank.wecross.account.service.authentication.packet.LoginResponse;
-import com.webank.wecross.account.service.exception.AccountManagerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,7 +33,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private JwtManager jwtManager;
     private UAManager uaManager;
 
-    public JwtLoginFilter(AuthenticationManager authenticationManager, JwtManager jwtManager, UAManager uaManager) {
+    public JwtLoginFilter(
+            AuthenticationManager authenticationManager,
+            JwtManager jwtManager,
+            UAManager uaManager) {
         this.authenticationManager = authenticationManager;
         this.jwtManager = jwtManager;
         this.uaManager = uaManager;
@@ -47,7 +48,6 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     public void setUaManager(UAManager uaManager) {
         this.uaManager = uaManager;
     }
-
 
     String getBodyString(HttpServletRequest request) throws Exception {
         BufferedReader br = request.getReader();
@@ -62,8 +62,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         String body = getBodyString(request);
 
         RestRequest<LoginRequest> restRequest =
-                objectMapper.readValue(body, new TypeReference<RestRequest<LoginRequest>>() {
-                });
+                objectMapper.readValue(body, new TypeReference<RestRequest<LoginRequest>>() {});
 
         LoginRequest loginRequest = restRequest.getData();
 
@@ -96,9 +95,18 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                 response.setCharacterEncoding("UTF-8");
                 response.setContentType("text/json;charset=utf-8");
 
-                LoginResponse loginResponse = LoginResponse.builder().errorCode(LoginResponse.ERROR).message("Login failed: " + e.getMessage()).build();
+                LoginResponse loginResponse =
+                        LoginResponse.builder()
+                                .errorCode(LoginResponse.ERROR)
+                                .message("Login failed: " + e.getMessage())
+                                .build();
 
-                RestResponse restResponse = RestResponse.builder().errorCode(0).message("success").data(loginResponse).build();
+                RestResponse restResponse =
+                        RestResponse.builder()
+                                .errorCode(0)
+                                .message("success")
+                                .data(loginResponse)
+                                .build();
 
                 response.getWriter().write(objectMapper.writeValueAsString(restResponse));
             } catch (Exception e1) {
@@ -128,20 +136,24 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         RestResponse restResponse = RestResponse.newSuccess();
         try {
-            LoginResponse loginResponse = LoginResponse.builder().errorCode(LoginResponse.SUCCESS)
-                    .message("success")
-                    .credential(tokenStr)
-                    .universalAccount(uaManager.getUA(username).toInfo())
-                    .build();
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.SUCCESS)
+                            .message("success")
+                            .credential(tokenStr)
+                            .universalAccount(uaManager.getUA(username).toInfo())
+                            .build();
 
             restResponse.setData(loginResponse);
 
         } catch (AccountManagerException e) {
-            LoginResponse loginResponse = LoginResponse.builder().errorCode(LoginResponse.ERROR)
-                    .message(e.getMessage())
-                    .credential(null)
-                    .universalAccount(null)
-                    .build();
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.ERROR)
+                            .message(e.getMessage())
+                            .credential(null)
+                            .universalAccount(null)
+                            .build();
 
             restResponse.setData(loginResponse);
         }
@@ -158,9 +170,14 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String ret;
 
-        LoginResponse loginResponse = LoginResponse.builder().errorCode(LoginResponse.ERROR).message(failed.getMessage()).build();
+        LoginResponse loginResponse =
+                LoginResponse.builder()
+                        .errorCode(LoginResponse.ERROR)
+                        .message(failed.getMessage())
+                        .build();
 
-        RestResponse restResponse = RestResponse.builder().errorCode(0).message("success").data(loginResponse).build();
+        RestResponse restResponse =
+                RestResponse.builder().errorCode(0).message("success").data(loginResponse).build();
 
         ret = objectMapper.writeValueAsString(restResponse);
 

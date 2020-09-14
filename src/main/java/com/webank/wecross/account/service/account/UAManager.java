@@ -6,14 +6,12 @@ import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.JPAException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class UAManager {
     private static Logger logger = LoggerFactory.getLogger(UAManager.class);
@@ -23,13 +21,13 @@ public class UAManager {
 
     private ThreadLocal<UniversalAccount> currentLoginUA = new ThreadLocal<>();
 
-
-    public UAManager() {
-    }
+    public UAManager() {}
 
     public UniversalAccount getUA(String username) throws AccountManagerException {
-        UniversalAccountTableBean universalAccountTableBean = universalAccountTableJPA.findByUsername(username);
-        List<ChainAccountTableBean> chainAccountTableBeanList = chainAccountTableJPA.findByUsernameOrderByKeyIDDesc(username);
+        UniversalAccountTableBean universalAccountTableBean =
+                universalAccountTableJPA.findByUsername(username);
+        List<ChainAccountTableBean> chainAccountTableBeanList =
+                chainAccountTableJPA.findByUsernameOrderByKeyIDDesc(username);
         if (universalAccountTableBean == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
@@ -95,13 +93,14 @@ public class UAManager {
         chainAccounts.add(chainAccountBCOSGM);
         chainAccounts.add(chainAccountFabric);
 
-        UniversalAccount mockUA = UniversalAccount.builder()
-                .username(username)
-                .uaID("xxxxuaID")
-                .pubKey("xxxxxpub")
-                .password("123456")
-                .secKey("xxxsec")
-                .build();
+        UniversalAccount mockUA =
+                UniversalAccount.builder()
+                        .username(username)
+                        .uaID("xxxxuaID")
+                        .pubKey("xxxxxpub")
+                        .password("123456")
+                        .secKey("xxxsec")
+                        .build();
 
         mockUA.setChainAccounts(chainAccounts);
         setUA(mockUA);

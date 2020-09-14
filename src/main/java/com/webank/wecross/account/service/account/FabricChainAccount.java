@@ -19,7 +19,7 @@ public class FabricChainAccount extends ChainAccount {
 
     @JsonIgnore
     public String getKey() {
-        return  super.secKey;
+        return super.secKey;
     }
 
     public void setKey(String key) {

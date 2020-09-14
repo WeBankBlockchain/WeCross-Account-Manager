@@ -12,7 +12,8 @@ import org.slf4j.LoggerFactory;
 public class ChainAccountBuilder {
     private static Logger logger = LoggerFactory.getLogger(ChainAccountBuilder.class);
 
-    public static ChainAccount buildFromTableBean(ChainAccountTableBean tableBean) throws AccountManagerException {
+    public static ChainAccount buildFromTableBean(ChainAccountTableBean tableBean)
+            throws AccountManagerException {
         String type = tableBean.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
@@ -21,9 +22,9 @@ public class ChainAccountBuilder {
                 return buildBCOSGM(tableBean);
             case Default.FABRIC_STUB_TYPE:
                 return buildFabric(tableBean);
-                default:
-                    logger.error("table bean unkown ChainAccount type: " + type);
-                    throw new UnknownChainAccountTypeException("Unkown ChainAccount type: " + type);
+            default:
+                logger.error("table bean unkown ChainAccount type: " + type);
+                throw new UnknownChainAccountTypeException("Unkown ChainAccount type: " + type);
         }
     }
 
@@ -68,7 +69,8 @@ public class ChainAccountBuilder {
         return account;
     }
 
-    public static ChainAccount buildFromRequest(AddChainAccountRequest request, String username) throws AddChainAccountException {
+    public static ChainAccount buildFromRequest(AddChainAccountRequest request, String username)
+            throws AddChainAccountException {
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
@@ -83,7 +85,8 @@ public class ChainAccountBuilder {
         }
     }
 
-    private static ChainAccount buildBCOS(AddChainAccountRequest request, String username) throws AddChainAccountException {
+    private static ChainAccount buildBCOS(AddChainAccountRequest request, String username)
+            throws AddChainAccountException {
         BCOSChainAccount account = new BCOSChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
@@ -95,7 +98,8 @@ public class ChainAccountBuilder {
         return account;
     }
 
-    private static ChainAccount buildBCOSGM(AddChainAccountRequest request, String username) throws AddChainAccountException {
+    private static ChainAccount buildBCOSGM(AddChainAccountRequest request, String username)
+            throws AddChainAccountException {
         BCOSGMChainAccount account = new BCOSGMChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
@@ -107,7 +111,8 @@ public class ChainAccountBuilder {
         return account;
     }
 
-    private static ChainAccount buildFabric(AddChainAccountRequest request, String username) throws AddChainAccountException {
+    private static ChainAccount buildFabric(AddChainAccountRequest request, String username)
+            throws AddChainAccountException {
         FabricChainAccount account = new FabricChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
@@ -117,5 +122,4 @@ public class ChainAccountBuilder {
         account.setKey(request.getSecKey());
         return account;
     }
-
 }

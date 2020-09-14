@@ -1,19 +1,15 @@
 package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.authentication.JwtManager;
-
-import javax.annotation.Resource;
-
 import com.webank.wecross.account.service.db.LogoutTokenTableJPA;
+import javax.annotation.Resource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class JwtManagerConfig {
-    @Resource
-    ApplicationConfig applicationConfig;
-    @Resource
-    LogoutTokenTableJPA logoutTokenTableJPA;
+    @Resource ApplicationConfig applicationConfig;
+    @Resource LogoutTokenTableJPA logoutTokenTableJPA;
 
     @Bean
     public JwtManager newJwtManager() {

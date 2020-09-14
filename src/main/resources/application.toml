@@ -1,5 +1,5 @@
 [service]
-    address = '127.0.0.1'
+    address = '0.0.0.0'
     port = 8340
     sslKey = 'classpath:ssl.key'
     sslCert = 'classpath:ssl.crt'
@@ -12,3 +12,8 @@
     secret = '123456'
     expires = 600 # 10 min
 
+[db]
+    # for connect database
+    url = 'jdbc:mysql://localhost:3306/test'
+    username = 'jimmy'
+    password = 'abc123'

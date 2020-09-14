@@ -2,10 +2,6 @@ package com.webank.wecross.account.service.account;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.webank.wecross.account.service.config.Default;
-import lombok.Builder;
-import lombok.Data;
-
-import javax.persistence.Column;
 
 public class BCOSChainAccount extends ChainAccount {
     public BCOSChainAccount() {

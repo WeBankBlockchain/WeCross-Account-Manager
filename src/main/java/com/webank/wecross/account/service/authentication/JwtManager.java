@@ -3,16 +3,14 @@ package com.webank.wecross.account.service.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Objects;
-
 import com.webank.wecross.account.service.db.LogoutTokenTableBean;
 import com.webank.wecross.account.service.db.LogoutTokenTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.JPAException;
 import com.webank.wecross.account.service.exception.LogoutException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +26,7 @@ public class JwtManager {
 
     private ThreadLocal<JwtToken> currentLoginToken = new ThreadLocal<>();
 
-    public JwtManager() {
-    }
+    public JwtManager() {}
 
     public static Logger getLogger() {
         return logger;
@@ -102,7 +99,6 @@ public class JwtManager {
         if (Objects.isNull(logoutTokenTableJPA.saveAndFlush(tableBean))) {
             throw new JPAException("logout failed");
         }
-
     }
 
     public void setSecret(String secret) {
