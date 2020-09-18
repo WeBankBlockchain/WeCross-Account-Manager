@@ -15,6 +15,7 @@ public class FabricChainAccount extends ChainAccount {
 
     public void setCert(String cert) {
         super.pubKey = cert;
+        super.identity = cert;
     }
 
     @JsonIgnore
@@ -24,5 +25,13 @@ public class FabricChainAccount extends ChainAccount {
 
     public void setKey(String key) {
         super.secKey = key;
+    }
+
+    public void setMspID(String mspID) {
+        super.ext0 = mspID;
+    }
+
+    public String getMspID() {
+        return super.ext0;
     }
 }

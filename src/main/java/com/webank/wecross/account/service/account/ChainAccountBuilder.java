@@ -34,11 +34,10 @@ public class ChainAccountBuilder {
         account.setKeyID(tableBean.getKeyID());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
-        account.setUAProof(tableBean.getUAProof());
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getExt0());
+        account.setAddress(tableBean.getIdentity());
         return account;
     }
 
@@ -48,11 +47,10 @@ public class ChainAccountBuilder {
         account.setKeyID(tableBean.getKeyID());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
-        account.setUAProof(tableBean.getUAProof());
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getExt0());
+        account.setAddress(tableBean.getIdentity());
         return account;
     }
 
@@ -62,7 +60,6 @@ public class ChainAccountBuilder {
         account.setKeyID(tableBean.getKeyID());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
-        account.setUAProof(tableBean.getUAProof());
 
         account.setCert(tableBean.getPub());
         account.setKey(tableBean.getSec());
@@ -90,7 +87,6 @@ public class ChainAccountBuilder {
         BCOSChainAccount account = new BCOSChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-        account.setUAProof("xxxuaproof"); // TODO: generate this
 
         account.setPubKey(request.getPubKey());
         account.setSecKey(request.getSecKey());
@@ -103,7 +99,6 @@ public class ChainAccountBuilder {
         BCOSGMChainAccount account = new BCOSGMChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-        account.setUAProof("xxxuaproof"); // TODO
 
         account.setPubKey(request.getPubKey());
         account.setSecKey(request.getSecKey());
@@ -116,10 +111,10 @@ public class ChainAccountBuilder {
         FabricChainAccount account = new FabricChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-        account.setUAProof("xxxx-uaproof"); // TODO
 
         account.setCert(request.getPubKey());
         account.setKey(request.getSecKey());
+        account.setMspID(request.getExt());
         return account;
     }
 }

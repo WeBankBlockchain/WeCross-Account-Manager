@@ -10,11 +10,11 @@ public class ChainAccount {
     private Integer id;
     protected String username; // ua
     protected Integer keyID;
+    protected String identity;
     protected String type;
     protected boolean isDefault;
     protected String pubKey;
     protected String secKey;
-    protected String UAProof;
     protected String ext0;
     protected String ext1;
     protected String ext2;
@@ -54,25 +54,16 @@ public class ChainAccount {
         isDefault = aDefault;
     }
 
-    @JsonIgnore
-    public String getUAProof() {
-        return UAProof;
-    }
-
-    public void setUAProof(String UAProof) {
-        this.UAProof = UAProof;
-    }
-
     public ChainAccountTableBean toTableBean() {
         ChainAccountTableBean tableBean = new ChainAccountTableBean();
         tableBean.setId(id);
         tableBean.setUsername(username);
         tableBean.setKeyID(keyID);
+        tableBean.setIdentity(identity);
         tableBean.setType(type);
         tableBean.setDefault(isDefault);
         tableBean.setPub(pubKey);
         tableBean.setSec(secKey);
-        tableBean.setUAProof(UAProof);
         tableBean.setExt0(ext0);
         tableBean.setExt1(ext1);
         tableBean.setExt2(ext2);
@@ -85,11 +76,11 @@ public class ChainAccount {
     public static class Details {
         protected String username; // ua
         protected Integer keyID;
+        protected String identity;
         protected String type;
         protected boolean isDefault;
         protected String pubKey;
         protected String secKey;
-        protected String UAProof;
         protected String ext0;
         protected String ext1;
         protected String ext2;
@@ -100,11 +91,11 @@ public class ChainAccount {
         return Details.builder()
                 .username(username)
                 .keyID(keyID)
+                .identity(identity)
                 .type(type)
                 .isDefault(isDefault)
                 .pubKey(pubKey)
                 .secKey(secKey)
-                .UAProof(UAProof)
                 .ext0(ext0)
                 .ext1(ext1)
                 .ext2(ext2)
@@ -119,5 +110,13 @@ public class ChainAccount {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(String identity) {
+        this.identity = identity;
     }
 }

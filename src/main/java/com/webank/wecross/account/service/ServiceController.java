@@ -7,7 +7,7 @@ import com.webank.wecross.account.service.account.ChainAccount;
 import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
-import com.webank.wecross.account.service.account.UniversalAccountFactory;
+import com.webank.wecross.account.service.account.UniversalAccountBuilder;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
@@ -98,7 +98,7 @@ public class ServiceController {
             String password = registerRequest.getPassword();
 
             UAManager uaManager = serviceContext.getUaManager();
-            UniversalAccount newUA = UniversalAccountFactory.newUA(username, password);
+            UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
 
             uaManager.setUA(newUA);
 
@@ -290,5 +290,39 @@ public class ServiceController {
         response.setData(ua.toDetails());
 
         return response;
+    }
+
+    static class UARequest {
+        public String identity;
+    }
+
+    @RequestMapping(value = "/auth/getUniversalAccountByChainAccountIdentity")
+    private Object getUniversalAccountByChainAccountIdentity(@RequestBody String params) {
+
+        // must login with admin
+        if (!serviceContext.getUaManager().isCurrentLoginAdminUA()) {
+            return RestResponse.newFailed("Please use admin to query");
+        }
+
+        RestRequest<UARequest> restRequest;
+        RestResponse restResponse;
+        try {
+            restRequest =
+                    objectMapper.readValue(params, new TypeReference<RestRequest<UARequest>>() {});
+
+            String identity = restRequest.getData().identity;
+            if (identity == null || identity.length() == 0) {
+                throw new AccountManagerException("identity is not given");
+            }
+
+            UniversalAccount ua = serviceContext.getUaManager().getUAByChainAccount(identity);
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(ua.toDetails());
+        } catch (Exception e) {
+            restResponse = RestResponse.newFailed(e.getMessage());
+            return restResponse;
+        }
+
+        return restResponse;
     }
 }

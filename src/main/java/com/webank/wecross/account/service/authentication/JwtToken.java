@@ -11,7 +11,7 @@ public class JwtToken {
     private DecodedJWT jwt;
 
     public JwtToken(String tokenStr) {
-        this.tokenStr = tokenStr;
+        this.tokenStr = tokenStr.replaceAll(JwtToken.TOKEN_PREFIX, "").replaceAll(" ", "");
     }
 
     public String getIssuer() {

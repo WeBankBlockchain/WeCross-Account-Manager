@@ -1,6 +1,7 @@
 package com.webank.wecross.account.service.account;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
@@ -22,6 +23,7 @@ public class UniversalAccount {
     private String username;
     private String uaID;
     private String pubKey;
+    private boolean isAdmin;
 
     @JsonIgnore private String password;
 
@@ -111,7 +113,6 @@ public class UniversalAccount {
                 ca.isDefault = chainAccount.isDefault;
                 ca.pubKey = chainAccount.pubKey;
                 ca.secKey = chainAccount.secKey;
-                ca.UAProof = chainAccount.UAProof;
                 ca.ext0 = chainAccount.ext0;
                 ca.ext1 = chainAccount.ext1;
                 ca.ext2 = chainAccount.ext2;
@@ -155,6 +156,9 @@ public class UniversalAccount {
         private String username;
         private String uaID;
         private String pubKey;
+
+        @JsonProperty("isAdmin")
+        private boolean isAdmin;
     }
 
     public Info toInfo() {
@@ -162,6 +166,7 @@ public class UniversalAccount {
         info.setUsername(this.username);
         info.setUaID(this.uaID);
         info.setPubKey(this.pubKey);
+        info.setAdmin(isAdmin);
         return info;
     }
 
@@ -173,6 +178,10 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+
+        @JsonProperty("isAdmin")
+        private boolean isAdmin;
+
         private Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails;
     }
 
@@ -184,6 +193,7 @@ public class UniversalAccount {
         details.setPassword(password);
         details.setSecKey(secKey);
         details.setRole(role);
+        details.setAdmin(isAdmin);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
         for (Map.Entry<String, Map<Integer, ChainAccount>> t2cas : type2ChainAccounts.entrySet()) {

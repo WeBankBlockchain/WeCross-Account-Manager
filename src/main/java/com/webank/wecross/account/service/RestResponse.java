@@ -16,6 +16,6 @@ public class RestResponse {
     }
 
     public static RestResponse newFailed(String message) {
-        return builder().version("1.0").errorCode(1).message("failed").build();
+        return builder().version("1.0").errorCode(1).message(message).build();
     }
 }

@@ -26,6 +26,7 @@ public class ApplicationConfig {
     private static Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
 
     public Service service;
+    public Admin admin;
     public Auth auth;
     public DB db;
 
@@ -37,6 +38,7 @@ public class ApplicationConfig {
 
     public ApplicationConfig(Toml toml) throws ConfigurationException {
         this.service = new Service(toml);
+        this.admin = new Admin(toml);
         this.auth = new Auth(toml);
         this.db = new DB(toml);
     }
@@ -86,6 +88,22 @@ public class ApplicationConfig {
                     + ", sslOn="
                     + sslOn
                     + '}';
+        }
+    }
+
+    class Admin {
+        public String name;
+        public String password;
+
+        Admin(Toml toml) throws ConfigurationException {
+            this.name = parseString(toml, "admin.name");
+            this.password = parseString(toml, "admin.password");
+            logger.info("Load configuration: " + this.name);
+        }
+
+        @Override
+        public String toString() {
+            return "Admin{" + "name='" + name + '\'' + '}';
         }
     }
 

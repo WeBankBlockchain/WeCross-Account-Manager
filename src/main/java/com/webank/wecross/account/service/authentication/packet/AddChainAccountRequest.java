@@ -7,5 +7,6 @@ public class AddChainAccountRequest {
     private String type;
     private String pubKey;
     private String secKey;
+    private String ext;
     private Boolean isDefault = false;
 }

@@ -6,6 +6,10 @@
     caCert = 'classpath:ca.crt'
     sslOn = false
 
+[admin]
+    name = 'org1-admin'
+    password = '123456'
+
 [auth]
     # for issuing token
     name = 'org1'

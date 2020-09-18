@@ -10,11 +10,11 @@ public class BCOSGMChainAccount extends ChainAccount {
     }
 
     public String getAddress() {
-        return super.ext0;
+        return super.identity;
     }
 
     public void setAddress(String address) {
-        super.ext0 = address;
+        super.identity = address;
     }
 
     public String getPubKey() {

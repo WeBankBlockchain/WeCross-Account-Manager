@@ -18,10 +18,15 @@ public class UAManager {
 
     private UniversalAccountTableJPA universalAccountTableJPA;
     private ChainAccountTableJPA chainAccountTableJPA;
+    private String adminName;
 
     private ThreadLocal<UniversalAccount> currentLoginUA = new ThreadLocal<>();
 
     public UAManager() {}
+
+    public boolean isUAExist(String username) {
+        return Objects.nonNull(universalAccountTableJPA.findByUsername(username));
+    }
 
     public UniversalAccount getUA(String username) throws AccountManagerException {
         UniversalAccountTableBean universalAccountTableBean =
@@ -32,11 +37,10 @@ public class UAManager {
             throw new UsernameNotFoundException("User not found: " + username);
         }
 
-        return UniversalAccountBuilder.build(universalAccountTableBean, chainAccountTableBeanList);
-    }
-
-    public boolean isUAExist(String username) {
-        return Objects.nonNull(universalAccountTableJPA.findByUsername(username));
+        UniversalAccount ua =
+                UniversalAccountBuilder.build(universalAccountTableBean, chainAccountTableBeanList);
+        ua.setAdmin(username.equals(adminName));
+        return ua;
     }
 
     public void setUA(UniversalAccount ua) throws AccountManagerException {
@@ -49,13 +53,43 @@ public class UAManager {
             chainAccountTableBeanList.add(chainAccountTableBean);
         }
 
-        if (Objects.isNull(universalAccountTableJPA.saveAndFlush(universalAccountTableBean))) {
-            throw new JPAException("set ua failed");
+        try {
+            universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
+        } catch (Exception e) {
+            throw new JPAException("set ua failed: " + e.getMessage());
         }
-        if (Objects.isNull(chainAccountTableJPA.saveAll(chainAccountTableBeanList))) {
-            throw new JPAException("set chain account failed");
+        try {
+
+            chainAccountTableJPA.saveAll(chainAccountTableBeanList);
+
+        } catch (Exception e) {
+            throw new JPAException(
+                    "set chain account failed (chain account existing?): " + e.getMessage());
         }
         chainAccountTableJPA.flush();
+    }
+
+    public UniversalAccount getUAByChainAccount(String chainAccountIdentity)
+            throws AccountManagerException {
+        List<ChainAccountTableBean> chainAccountTableBeanList =
+                chainAccountTableJPA.findByIdentityOrderByKeyIDDesc(chainAccountIdentity);
+        if (chainAccountTableBeanList == null) {
+            throw new UsernameNotFoundException("Chain account not found: " + chainAccountIdentity);
+        }
+
+        // check username are the same
+        String username = chainAccountTableBeanList.get(0).getUsername();
+        for (ChainAccountTableBean chainAccountTableBean : chainAccountTableBeanList) {
+            if (!chainAccountTableBean.getUsername().equals(username)) {
+                logger.warn(
+                        "Found 2 username:[{},{}] under a chain account identity: {}",
+                        username,
+                        chainAccountTableBean.getUsername(),
+                        chainAccountIdentity);
+            }
+        }
+
+        return getUA(username);
     }
 
     // TODO: delete mock
@@ -66,7 +100,6 @@ public class UAManager {
         chainAccountBCOS.setKeyID(0);
         chainAccountBCOS.setUsername(username);
         chainAccountBCOS.setDefault(true);
-        chainAccountBCOS.setUAProof("uaproof");
         ((BCOSChainAccount) chainAccountBCOS).setPubKey("xxxpub");
         ((BCOSChainAccount) chainAccountBCOS).setSecKey("xxxsec");
         ((BCOSChainAccount) chainAccountBCOS).setAddress("xxxaddr");
@@ -75,16 +108,14 @@ public class UAManager {
         chainAccountBCOSGM.setKeyID(1);
         chainAccountBCOSGM.setUsername(username);
         chainAccountBCOSGM.setDefault(true);
-        chainAccountBCOSGM.setUAProof("uaproof");
         ((BCOSGMChainAccount) chainAccountBCOSGM).setPubKey("xxxpub");
         ((BCOSGMChainAccount) chainAccountBCOSGM).setSecKey("xxxsec");
-        ((BCOSGMChainAccount) chainAccountBCOSGM).setAddress("xxxaddr");
+        ((BCOSGMChainAccount) chainAccountBCOSGM).setAddress("xxxaddrgm");
 
         ChainAccount chainAccountFabric = new FabricChainAccount();
         chainAccountFabric.setKeyID(2);
         chainAccountFabric.setUsername(username);
         chainAccountFabric.setDefault(true);
-        chainAccountFabric.setUAProof("uaproof");
         ((FabricChainAccount) chainAccountFabric).setCert("xxxcert");
         ((FabricChainAccount) chainAccountFabric).setKey("xxxkey");
 
@@ -106,6 +137,39 @@ public class UAManager {
         setUA(mockUA);
     }
 
+    public void initAdminUA(String username, String password) throws AccountManagerException {
+        setAdminName(username);
+        UniversalAccount admin;
+        try {
+            admin = getUA(username);
+
+            logger.info("Found adminUA. Check: {}", username);
+            if (!admin.getUsername().equals(username)) {
+                throw new AccountManagerException("Invalid adminUA usernmame: " + username);
+            }
+
+            if (!admin.getPassword().equals(password)) {
+                System.out.println("Invalid adminUA password, please check.");
+                throw new AccountManagerException("Invalid adminUA password, please check.");
+            }
+
+        } catch (UsernameNotFoundException e) {
+            // not found
+            logger.info("AdminUA not found. Generate: {}", username);
+            admin = UniversalAccountBuilder.newUA(username, password);
+            setUA(admin);
+            logger.info("AdminUA generate success!");
+        }
+    }
+
+    public boolean isAdminUA(UniversalAccount universalAccount) {
+        return universalAccount.getUsername().equals(adminName);
+    }
+
+    public boolean isCurrentLoginAdminUA() {
+        return isAdminUA(getCurrentLoginUA());
+    }
+
     public void setUniversalAccountTableJPA(UniversalAccountTableJPA universalAccountTableJPA) {
         this.universalAccountTableJPA = universalAccountTableJPA;
     }
@@ -125,5 +189,13 @@ public class UAManager {
     public void setCurrentLoginUA(String username) throws AccountManagerException {
         UniversalAccount ua = getUA(username);
         this.setCurrentLoginUA(ua);
+    }
+
+    public String getAdminName() {
+        return adminName;
+    }
+
+    public void setAdminName(String adminName) {
+        this.adminName = adminName;
     }
 }
