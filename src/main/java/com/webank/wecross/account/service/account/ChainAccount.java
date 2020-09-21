@@ -2,6 +2,7 @@ package com.webank.wecross.account.service.account;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import lombok.Builder;
 import lombok.Data;
@@ -78,7 +79,10 @@ public class ChainAccount {
         protected Integer keyID;
         protected String identity;
         protected String type;
+
+        @JsonProperty("isDefault")
         protected boolean isDefault;
+
         protected String pubKey;
         protected String secKey;
         protected String ext0;

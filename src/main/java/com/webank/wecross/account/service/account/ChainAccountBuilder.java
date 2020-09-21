@@ -32,12 +32,13 @@ public class ChainAccountBuilder {
         BCOSChainAccount account = new BCOSChainAccount();
         account.setId(tableBean.getId());
         account.setKeyID(tableBean.getKeyID());
+        account.setIdentity(tableBean.getIdentity());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getIdentity());
+        account.setAddress(tableBean.getExt0());
         return account;
     }
 
@@ -45,12 +46,13 @@ public class ChainAccountBuilder {
         BCOSGMChainAccount account = new BCOSGMChainAccount();
         account.setId(tableBean.getId());
         account.setKeyID(tableBean.getKeyID());
+        account.setIdentity(tableBean.getIdentity());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getIdentity());
+        account.setAddress(tableBean.getExt0());
         return account;
     }
 
@@ -58,11 +60,13 @@ public class ChainAccountBuilder {
         FabricChainAccount account = new FabricChainAccount();
         account.setId(tableBean.getId());
         account.setKeyID(tableBean.getKeyID());
+        account.setIdentity(tableBean.getIdentity());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
 
         account.setCert(tableBean.getPub());
         account.setKey(tableBean.getSec());
+        account.setMspID(tableBean.getExt0());
         return account;
     }
 
@@ -87,10 +91,10 @@ public class ChainAccountBuilder {
         BCOSChainAccount account = new BCOSChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-
+        account.setIdentity(request.getPubKey());
         account.setPubKey(request.getPubKey());
         account.setSecKey(request.getSecKey());
-        account.setAddress("xxxxxxaddress-" + username); // TODO
+        account.setAddress(request.getExt());
         return account;
     }
 
@@ -99,10 +103,10 @@ public class ChainAccountBuilder {
         BCOSGMChainAccount account = new BCOSGMChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-
+        account.setIdentity(request.getPubKey());
         account.setPubKey(request.getPubKey());
         account.setSecKey(request.getSecKey());
-        account.setAddress("xxxxxxaddress-" + username); // TODO
+        account.setAddress(request.getExt());
         return account;
     }
 
@@ -111,7 +115,7 @@ public class ChainAccountBuilder {
         FabricChainAccount account = new FabricChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-
+        account.setIdentity(request.getPubKey());
         account.setCert(request.getPubKey());
         account.setKey(request.getSecKey());
         account.setMspID(request.getExt());
