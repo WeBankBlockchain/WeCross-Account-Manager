@@ -18,6 +18,6 @@
 
 [db]
     # for connect database
-    url = 'jdbc:mysql://localhost:3306/test'
+    url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
     username = 'root'
     password = ''
