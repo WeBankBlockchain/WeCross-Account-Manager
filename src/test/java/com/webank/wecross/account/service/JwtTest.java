@@ -24,12 +24,12 @@ public class JwtTest {
 
         System.out.println(t1String);
 
-        jwtManager.verifyAnddecode(t1String);
+        jwtManager.verifyAndDecode(t1String);
 
         try {
             String fakeToken =
                     "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWNyb3NzLWFjY291bnQtbWFuYWdlciJ9.cIEdBVUY15gG6tCqQxLcN7rg9BXkmOiGMqGMmPl1iAB";
-            jwtManager.verifyAnddecode(fakeToken);
+            jwtManager.verifyAndDecode(fakeToken);
             Assert.assertTrue(false); // assume never comes here
         } catch (Exception e) {
             Assert.assertTrue(true);
@@ -45,7 +45,7 @@ public class JwtTest {
 
         System.out.println(t1String);
 
-        JwtToken t2 = jwtManager.verifyAnddecode(t1String);
+        JwtToken t2 = jwtManager.verifyAndDecode(t1String);
         Assert.assertEquals(accountName, t2.getAudience());
     }
 
@@ -60,13 +60,13 @@ public class JwtTest {
         System.out.println("time 0" + (new Date()).toString() + " jwt " + t1String);
         Thread.sleep(200); // sleep 0.5s
         System.out.println("time 1 " + (new Date()).toString());
-        jwtManager.verifyAnddecode(t1String); // verify ok
+        jwtManager.verifyAndDecode(t1String); // verify ok
         System.out.println("time 2 " + (new Date()).toString());
 
         Thread.sleep(2000); // sleep 2s
         System.out.println("time 3 " + (new Date()).toString());
         try {
-            JwtToken token = jwtManager.verifyAnddecode(t1String); // verify failed
+            JwtToken token = jwtManager.verifyAndDecode(t1String); // verify failed
             System.out.println("time 4 " + token.getExpiresAt());
             Assert.assertTrue(false); // assume never comes here
         } catch (Exception e) {
