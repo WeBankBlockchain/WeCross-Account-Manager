@@ -1,1 +1,1 @@
-create database wecross_account_manager;
+create database if not exists wecross_account_manager;
