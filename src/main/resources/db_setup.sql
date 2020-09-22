@@ -1,0 +1,1 @@
+create database wecross_account_manager;
