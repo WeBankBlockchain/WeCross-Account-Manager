@@ -56,7 +56,7 @@ cache:
 before_install:
   - gradle wrapper
   - sudo apt-get -y install jq
-  - mysql -u root --password="" < .ci/travis.sql
+  - mysql -u root --password="" < src/main/resources/db_setup.sql
 script: |
   bash .ci/ci_check.sh && bash .ci/ci_integration_check.sh
 after_success:
