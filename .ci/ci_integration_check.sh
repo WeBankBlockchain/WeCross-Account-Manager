@@ -36,7 +36,7 @@ config()
 
     LOG_INFO "Configure application.properties"
     # spring.jpa.properties.hibernate.hbm2ddl.auto=create
-    sed_i 's/update/create/g' application.properties
+    # sed_i 's/update/create/g' application.properties
     cat application.properties
 
     cd -
