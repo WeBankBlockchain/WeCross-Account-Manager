@@ -94,7 +94,4 @@ main()
     test
 }
 
-test
-
-
-#main $@
+main $@
