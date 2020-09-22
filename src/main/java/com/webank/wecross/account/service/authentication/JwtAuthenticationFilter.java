@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
             if (!isJwtTokenWithPrefix(tokenStringWithPrefix)) {
                 throw new Exception("Please login and use credential to access");
             }
-            JwtToken token = jwtManager.verifyAnddecode(tokenStringWithPrefix);
+            JwtToken token = jwtManager.verifyAndDecode(tokenStringWithPrefix);
 
             jwtManager.setCurrentLoginToken(token);
             uaManager.setCurrentLoginUA(token.getAudience());

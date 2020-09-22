@@ -50,6 +50,5 @@ out/
 *_sk
 *.keystore
 *.truststore
-db/
 routers/
 logs/

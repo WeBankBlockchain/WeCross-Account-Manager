@@ -59,7 +59,7 @@ public class JwtManager {
         return token;
     }
 
-    public JwtToken verifyAnddecode(String tokenStr) throws AccountManagerException {
+    public JwtToken verifyAndDecode(String tokenStr) throws AccountManagerException {
         String tokenWithoutPrefix =
                 tokenStr.replaceAll(JwtToken.TOKEN_PREFIX, "").replaceAll(" ", "");
 

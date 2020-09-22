@@ -9,14 +9,14 @@ services:
 matrix:
   fast_finish: true
   include:
-    - language: python
-      python: 3.6
-      dist: xenial
-      before_cache:
-      cache:
-      before_install:
-      script: |
-        bash .ci/ci_check_commit.sh
+#    - language: python
+#      python: 3.6
+#      dist: xenial
+#      before_cache:
+#      cache:
+#      before_install:
+#      script: |
+#        bash .ci/ci_check_commit.sh
 
     # ubuntu 16
     - language: java
@@ -56,7 +56,8 @@ cache:
 before_install:
   - gradle wrapper
   - sudo apt-get -y install jq
+  - mysql -u root --password="" < .ci/travis.sql
 script: |
-  bash .ci/ci_check.sh
+  bash .ci/ci_check.sh && bash .ci/ci_integration_check.sh
 after_success:
     - bash <(curl -s https://codecov.io/bash)
