@@ -19,5 +19,5 @@
 [db]
     # for connect database
     url = 'jdbc:mysql://localhost:3306/test'
-    username = 'jimmy'
-    password = 'abc123'
+    username = 'root'
+    password = ''

@@ -1,10 +1,14 @@
 [service]
-    address = '127.0.0.1'
+    address = '0.0.0.0'
     port = 8340
     sslKey = 'classpath:ssl.key'
     sslCert = 'classpath:ssl.crt'
     caCert = 'classpath:ca.crt'
-    # sslOn = true
+    sslOn = true
+
+[admin]
+    name = 'org1-admin'
+    password = '123456'
 
 [auth]
     # for issuing token
@@ -12,3 +16,8 @@
     secret = '123456'
     expires = 600 # 10 min
 
+[db]
+    # for connect database
+    url = 'jdbc:mysql://localhost:3306/test'
+    username = 'root'
+    password = ''
