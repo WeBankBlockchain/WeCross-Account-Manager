@@ -57,6 +57,6 @@ before_install:
   - gradle wrapper
   - sudo apt-get -y install jq
 script: |
-  bash .ci/ci_check.sh
+  bash .ci/ci_check.sh && bash .ci/ci_integration_check.sh
 after_success:
     - bash <(curl -s https://codecov.io/bash)
