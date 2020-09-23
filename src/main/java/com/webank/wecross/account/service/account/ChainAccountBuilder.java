@@ -92,7 +92,7 @@ public class ChainAccountBuilder {
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
         account.setIdentity(request.getPubKey());
-        account.setPubKey(request.getPubKey());
+        account.setPubKey(request.getExt());
         account.setSecKey(request.getSecKey());
         account.setAddress(request.getExt());
         return account;
@@ -104,7 +104,7 @@ public class ChainAccountBuilder {
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
         account.setIdentity(request.getPubKey());
-        account.setPubKey(request.getPubKey());
+        account.setPubKey(request.getExt());
         account.setSecKey(request.getSecKey());
         account.setAddress(request.getExt());
         return account;
