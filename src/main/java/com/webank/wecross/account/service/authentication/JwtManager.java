@@ -3,11 +3,16 @@ package com.webank.wecross.account.service.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.webank.wecross.account.service.db.LogoutTokenTableBean;
+import com.webank.wecross.account.service.db.LogoutTokenTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.JPAException;
+import com.webank.wecross.account.service.exception.LogoutException;
 import com.webank.wecross.account.service.exception.UANotFoundException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +21,7 @@ public class JwtManager {
     private static Logger logger = LoggerFactory.getLogger(JwtManager.class);
 
     private UniversalAccountTableJPA universalAccountTableJPA;
+    private LogoutTokenTableJPA logoutTokenTableJPA;
 
     private String issuer;
     private Long expires;
@@ -76,6 +82,7 @@ public class JwtManager {
                         // .acceptLeeway(expires)
                         .build(); // Reusable verifier instance
         verifier.verify(tokenWithoutPrefix);
+        check(tokenStr);
     }
 
     public JwtToken decode(String tokenStr) throws AccountManagerException {
@@ -99,6 +106,25 @@ public class JwtManager {
         return cal.getTime();
     }
 
+    private void check(String tokenStr) throws AccountManagerException {
+        if (hasLogoutToken(tokenStr)) {
+            throw new LogoutException("user has logged out");
+        }
+    }
+
+    public boolean hasLogoutToken(String tokenStr) {
+        LogoutTokenTableBean tableBean = logoutTokenTableJPA.findByToken(tokenStr);
+        return Objects.nonNull(tableBean);
+    }
+
+    public void setLogoutToken(String tokenStr) throws JPAException {
+        LogoutTokenTableBean tableBean = new LogoutTokenTableBean();
+        tableBean.setToken(tokenStr);
+        if (Objects.isNull(logoutTokenTableJPA.saveAndFlush(tableBean))) {
+            throw new JPAException("logout failed");
+        }
+    }
+
     public JwtToken getCurrentLoginToken() {
         return currentLoginToken.get();
     }
@@ -118,5 +144,9 @@ public class JwtManager {
         }
 
         return tokenSec;
+    }
+
+    public void setLogoutTokenTableJPA(LogoutTokenTableJPA logoutTokenTableJPA) {
+        this.logoutTokenTableJPA = logoutTokenTableJPA;
     }
 }

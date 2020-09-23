@@ -8,6 +8,7 @@ import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
+import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
@@ -119,19 +120,31 @@ public class ServiceController {
         return restResponse;
     }
 
+    @RequestMapping(value = "/auth/hasLogin", produces = "application/json")
+    private Object hasLogin(@RequestBody String params) {
+        // if goes here, the user has login and token has not expired
+        RestResponse restResponse = RestResponse.newSuccess();
+        restResponse.setData(null);
+        return restResponse;
+    }
+
     @RequestMapping(value = "/auth/logout", produces = "application/json")
     private Object logout(@RequestBody String params) {
 
         LogoutResponse logoutResponse;
 
         try {
-            UAManager uaManager = serviceContext.getUaManager();
-            UniversalAccount ua = uaManager.getCurrentLoginUA();
+            /* kick out all login token
+                        UAManager uaManager = serviceContext.getUaManager();
+                        UniversalAccount ua = uaManager.getCurrentLoginUA();
 
-            // reset token secret
-            ua.setTokenSec(UniversalAccountBuilder.newTokenStr());
-            uaManager.setUA(ua);
-
+                        // reset token secret
+                        ua.setTokenSec(UniversalAccountBuilder.newTokenStr());
+                        uaManager.setUA(ua);
+            */
+            JwtManager jwtManager = serviceContext.getJwtManager();
+            String tokenStr = jwtManager.getCurrentLoginToken().getTokenStr();
+            jwtManager.setLogoutToken(tokenStr);
             logoutResponse =
                     LogoutResponse.builder()
                             .errorCode(LogoutResponse.SUCCESS)
