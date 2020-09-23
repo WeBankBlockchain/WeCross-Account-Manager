@@ -8,7 +8,6 @@ import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
-import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
@@ -126,10 +125,12 @@ public class ServiceController {
         LogoutResponse logoutResponse;
 
         try {
+            UAManager uaManager = serviceContext.getUaManager();
+            UniversalAccount ua = uaManager.getCurrentLoginUA();
 
-            JwtManager jwtManager = serviceContext.getJwtManager();
-            String tokenStr = jwtManager.getCurrentLoginToken().getTokenStr();
-            jwtManager.setLogoutToken(tokenStr);
+            // reset token secret
+            ua.setTokenSec(UniversalAccountBuilder.newTokenStr());
+            uaManager.setUA(ua);
 
             logoutResponse =
                     LogoutResponse.builder()

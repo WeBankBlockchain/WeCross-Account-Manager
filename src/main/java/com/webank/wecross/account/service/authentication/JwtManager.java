@@ -3,14 +3,11 @@ package com.webank.wecross.account.service.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.webank.wecross.account.service.db.LogoutTokenTableBean;
-import com.webank.wecross.account.service.db.LogoutTokenTableJPA;
+import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.exception.JPAException;
-import com.webank.wecross.account.service.exception.LogoutException;
+import com.webank.wecross.account.service.exception.UANotFoundException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +15,8 @@ public class JwtManager {
 
     private static Logger logger = LoggerFactory.getLogger(JwtManager.class);
 
-    private LogoutTokenTableJPA logoutTokenTableJPA;
+    private UniversalAccountTableJPA universalAccountTableJPA;
 
-    private String secret;
     private String issuer;
     private Long expires;
 
@@ -36,26 +32,24 @@ public class JwtManager {
         JwtManager.logger = logger;
     }
 
-    public JwtToken newToken(String accountName) {
+    public JwtToken newToken(String accountName) throws AccountManagerException {
         JwtToken token = null;
-        try {
-            Date startTime = new Date();
-            Date expiresTime = toExpiresDate(startTime);
 
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-            String tokenStr =
-                    JWT.create()
-                            .withIssuer(issuer)
-                            .withAudience(accountName)
-                            .withIssuedAt(startTime)
-                            .withNotBefore(startTime)
-                            .withExpiresAt(expiresTime)
-                            .sign(algorithm);
-            token = new JwtToken(tokenStr);
-        } catch (Exception exception) {
-            // Invalid Signing configuration / Couldn't convert Claims.
-            logger.error("new Token error, name:" + accountName);
-        }
+        Date startTime = new Date();
+        Date expiresTime = toExpiresDate(startTime);
+        String secret = getUATokenSec(accountName);
+
+        Algorithm algorithm = Algorithm.HMAC256(secret);
+        String tokenStr =
+                JWT.create()
+                        .withIssuer(issuer)
+                        .withAudience(accountName)
+                        .withIssuedAt(startTime)
+                        .withNotBefore(startTime)
+                        .withExpiresAt(expiresTime)
+                        .sign(algorithm);
+        token = new JwtToken(tokenStr);
+
         return token;
     }
 
@@ -71,8 +65,10 @@ public class JwtManager {
     public void verify(String tokenStr) throws AccountManagerException {
         String tokenWithoutPrefix =
                 tokenStr.replaceAll(JwtToken.TOKEN_PREFIX, "").replaceAll(" ", "");
+        JwtToken token = decode(tokenStr);
+        String accountName = token.getAudience();
+        String secret = getUATokenSec(accountName);
 
-        check(tokenWithoutPrefix);
         Algorithm algorithm = Algorithm.HMAC256(secret);
         JWTVerifier verifier =
                 JWT.require(algorithm)
@@ -82,27 +78,10 @@ public class JwtManager {
         verifier.verify(tokenWithoutPrefix);
     }
 
-    private void check(String tokenStr) throws AccountManagerException {
-        if (hasLogoutToken(tokenStr)) {
-            throw new LogoutException("user has logged out");
-        }
-    }
-
-    public boolean hasLogoutToken(String tokenStr) {
-        LogoutTokenTableBean tableBean = logoutTokenTableJPA.findByToken(tokenStr);
-        return Objects.nonNull(tableBean);
-    }
-
-    public void setLogoutToken(String tokenStr) throws JPAException {
-        LogoutTokenTableBean tableBean = new LogoutTokenTableBean();
-        tableBean.setToken(tokenStr);
-        if (Objects.isNull(logoutTokenTableJPA.saveAndFlush(tableBean))) {
-            throw new JPAException("logout failed");
-        }
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
+    public JwtToken decode(String tokenStr) throws AccountManagerException {
+        String tokenWithoutPrefix =
+                tokenStr.replaceAll(JwtToken.TOKEN_PREFIX, "").replaceAll(" ", "");
+        return new JwtToken(tokenWithoutPrefix);
     }
 
     public void setIssuer(String issuer) {
@@ -120,15 +99,24 @@ public class JwtManager {
         return cal.getTime();
     }
 
-    public void setLogoutTokenTableJPA(LogoutTokenTableJPA logoutTokenTableJPA) {
-        this.logoutTokenTableJPA = logoutTokenTableJPA;
-    }
-
     public JwtToken getCurrentLoginToken() {
         return currentLoginToken.get();
     }
 
     public void setCurrentLoginToken(JwtToken currentLoginToken) {
         this.currentLoginToken.set(currentLoginToken);
+    }
+
+    public void setUniversalAccountTableJPA(UniversalAccountTableJPA universalAccountTableJPA) {
+        this.universalAccountTableJPA = universalAccountTableJPA;
+    }
+
+    private String getUATokenSec(String accountName) throws AccountManagerException {
+        String tokenSec = universalAccountTableJPA.findTokenSecByUsername(accountName);
+        if (tokenSec == null || tokenSec.length() == 0) {
+            throw new UANotFoundException("account " + accountName + " not found");
+        }
+
+        return tokenSec;
     }
 }

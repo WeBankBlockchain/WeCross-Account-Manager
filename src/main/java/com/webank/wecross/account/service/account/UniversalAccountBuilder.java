@@ -6,6 +6,7 @@ import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.NewUAException;
 import com.webank.wecross.account.service.utils.SM2;
 import java.security.KeyPair;
+import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class UniversalAccountBuilder {
                         .uaID(tableBean.getUaID())
                         .role(tableBean.getRole())
                         .password(tableBean.getPassword())
+                        .tokenSec(tableBean.getTokenSec())
                         .secKey(tableBean.getSec())
                         .build();
         ua.setChainAccounts(chainAccounts);
@@ -46,6 +48,7 @@ public class UniversalAccountBuilder {
             KeyPair keyPair = SM2.newKeyPair();
             String sec = SM2.toPemContent(keyPair);
             String pub = SM2.toPubHexString(keyPair);
+            String tokenSec = newTokenStr();
 
             UniversalAccount ua =
                     UniversalAccount.builder()
@@ -54,6 +57,7 @@ public class UniversalAccountBuilder {
                             .uaID(pub)
                             .role("User")
                             .password(password)
+                            .tokenSec(tokenSec)
                             .secKey(sec)
                             .build();
             ua.setChainAccounts(chainAccounts);
@@ -63,5 +67,13 @@ public class UniversalAccountBuilder {
             logger.error("New UA failed: " + e);
             throw new NewUAException(e.getMessage());
         }
+    }
+
+    public static String newTokenStr() {
+        // 32 string
+        return String.valueOf((new SecureRandom()).nextLong() % 100000000)
+                + String.valueOf((new SecureRandom()).nextLong() % 100000000)
+                + String.valueOf((new SecureRandom()).nextLong() % 100000000)
+                + String.valueOf((new SecureRandom()).nextLong() % 100000000);
     }
 }

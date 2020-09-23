@@ -90,7 +90,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                             loginRequest.getUsername(), loginRequest.getPassword()));
         } catch (Exception e) {
             try {
-                logger.error("Login exception: " + e);
+                logger.error("Login exception: ", e);
 
                 response.setCharacterEncoding("UTF-8");
                 response.setContentType("text/json;charset=utf-8");
@@ -123,19 +123,20 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             FilterChain chain,
             Authentication authResult)
             throws IOException {
-        User user = (User) authResult.getPrincipal();
-        String username = user.getUsername();
-        JwtToken jwtToken = jwtManager.newToken(username);
-
-        String tokenStr = jwtToken.getTokenStrWithPrefix();
-
-        logger.info("Login success: name:{} credential:{}", username, tokenStr);
-
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/json;charset=utf-8");
-
         RestResponse restResponse = RestResponse.newSuccess();
         try {
+            User user = (User) authResult.getPrincipal();
+            String username = user.getUsername();
+
+            JwtToken jwtToken = jwtManager.newToken(username);
+
+            String tokenStr = jwtToken.getTokenStrWithPrefix();
+
+            logger.info("Login success: name:{} credential:{}", username, tokenStr);
+
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("text/json;charset=utf-8");
+
             LoginResponse loginResponse =
                     LoginResponse.builder()
                             .errorCode(LoginResponse.SUCCESS)

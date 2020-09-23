@@ -27,6 +27,10 @@ public class UniversalAccountTableBean {
     @Column(nullable = false)
     private String password;
 
+    // secret
+    @Column(nullable = false)
+    private String tokenSec;
+
     @Column(nullable = false, columnDefinition = "text")
     private String sec;
 

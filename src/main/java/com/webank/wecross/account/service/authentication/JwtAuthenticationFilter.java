@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
             chain.doFilter(request, response); // call restful API
 
         } catch (Exception e) {
+            logger.error("Token authenticate failed: ", e);
             responseError(response, "Token authenticate failed: " + e.getMessage());
         }
     }

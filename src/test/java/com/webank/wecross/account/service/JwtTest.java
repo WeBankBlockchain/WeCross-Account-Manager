@@ -19,7 +19,7 @@ public class JwtTest {
     @Test
     public void verifyTest() throws Exception {
         JwtManager jwtManager = jwtManagerConfig.newJwtManager();
-        JwtToken t1 = jwtManager.newToken("Tom");
+        JwtToken t1 = jwtManager.newToken("org1-admin");
         String t1String = t1.getTokenStr();
 
         System.out.println(t1String);
@@ -38,7 +38,7 @@ public class JwtTest {
 
     @Test
     public void decodeTest() throws Exception {
-        String accountName = "Tom";
+        String accountName = "org1-admin";
         JwtManager jwtManager = jwtManagerConfig.newJwtManager();
         JwtToken t1 = jwtManager.newToken(accountName);
         String t1String = t1.getTokenStr();
@@ -51,7 +51,7 @@ public class JwtTest {
 
     @Test
     public void expiresTest() throws Exception {
-        String accountName = "Tom";
+        String accountName = "org1-admin";
         JwtManager jwtManager = jwtManagerConfig.newJwtManager();
         jwtManager.setExpires(new Long(1)); // expires is 1s
         JwtToken t1 = jwtManager.newToken(accountName);

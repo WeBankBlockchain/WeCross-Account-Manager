@@ -10,16 +10,27 @@ import org.slf4j.LoggerFactory;
 
 /*
 [service]
-        server = '127.0.0.1:8340'
-        sslKey = 'classpath:ssl.key'
-        sslCert = 'classpath:ssl.crt'
-        caCert = 'classpath:ca.crt'
-        # sslOn = true
+    address = '0.0.0.0'
+    port = 8340
+    sslKey = 'classpath:ssl.key'
+    sslCert = 'classpath:ssl.crt'
+    caCert = 'classpath:ca.crt'
+    sslOn = true
+
+[admin]
+    name = 'org1-admin'
+    password = '123456'
 
 [auth]
-        name = 'org1'
-        secret = '123456'
-        expires = 600 # 10 min
+    # for issuing token
+    name = 'org1'
+    expires = 18000 # 5 h
+
+[db]
+    # for connect database
+    url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
+    username = 'root'
+    password = ''
 */
 
 public class ApplicationConfig {
@@ -109,12 +120,10 @@ public class ApplicationConfig {
 
     class Auth {
         public String name;
-        public String secret;
         public long expires;
 
         Auth(Toml toml) throws ConfigurationException {
             this.name = parseString(toml, "auth.name");
-            this.secret = parseString(toml, "auth.secret");
             this.expires = parseLong(toml, "auth.expires", 600); // default 600s
 
             logger.info("Load configuration: " + this.toString());
@@ -122,16 +131,7 @@ public class ApplicationConfig {
 
         @Override
         public String toString() {
-            return "Auth{"
-                    + "name='"
-                    + name
-                    + '\''
-                    + ", secret='"
-                    + secret
-                    + '\''
-                    + ", expires="
-                    + expires
-                    + '}';
+            return "Auth{" + "name='" + name + '\'' + ", expires=" + expires + '}';
         }
     }
 
