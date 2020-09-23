@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
     # for issuing token
     name = 'org1'
     expires = 18000 # 5 h
+    noActiveExpires = 600 # 10 min
 
 [db]
     # for connect database
@@ -121,17 +122,27 @@ public class ApplicationConfig {
     class Auth {
         public String name;
         public long expires;
+        public long noActiveExpires;
 
         Auth(Toml toml) throws ConfigurationException {
             this.name = parseString(toml, "auth.name");
-            this.expires = parseLong(toml, "auth.expires", 600); // default 600s
+            this.expires = parseLong(toml, "auth.expires", 18000); // default 5h
+            this.noActiveExpires = parseLong(toml, "auth.noActiveExpires", 600); // default 600s
 
             logger.info("Load configuration: " + this.toString());
         }
 
         @Override
         public String toString() {
-            return "Auth{" + "name='" + name + '\'' + ", expires=" + expires + '}';
+            return "Auth{"
+                    + "name='"
+                    + name
+                    + '\''
+                    + ", expires="
+                    + expires
+                    + ", noActiveExpires="
+                    + noActiveExpires
+                    + '}';
         }
     }
 

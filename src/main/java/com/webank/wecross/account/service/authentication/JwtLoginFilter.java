@@ -129,8 +129,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             String username = user.getUsername();
 
             JwtToken jwtToken = jwtManager.newToken(username);
-
-            String tokenStr = jwtToken.getTokenStrWithPrefix();
+            jwtManager.setTokenActive(jwtToken); // active it during login
+            String tokenStr = jwtToken.getTokenStrWithPrefix(); // with prefix
 
             logger.info("Login success: name:{} credential:{}", username, tokenStr);
 

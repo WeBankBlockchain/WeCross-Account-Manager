@@ -9,10 +9,17 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "t_logout_token")
-public class LogoutTokenTableBean {
+@Table(name = "t_login_token")
+public class LoginTokenTableBean {
     @Id @GeneratedValue private Integer id;
 
     @Column(nullable = false, unique = true)
     private String token; // token without prefix 'Bearer'
+
+    @Column(nullable = false)
+    private long lastActiveTimestamp;
+
+    public void setLogout() {
+        setLastActiveTimestamp(0); // current - 0 > expires (always true)
+    }
 }

@@ -3,8 +3,8 @@ package com.webank.wecross.account.service.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.webank.wecross.account.service.db.LogoutTokenTableBean;
-import com.webank.wecross.account.service.db.LogoutTokenTableJPA;
+import com.webank.wecross.account.service.db.LoginTokenTableBean;
+import com.webank.wecross.account.service.db.LoginTokenTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.JPAException;
@@ -21,10 +21,11 @@ public class JwtManager {
     private static Logger logger = LoggerFactory.getLogger(JwtManager.class);
 
     private UniversalAccountTableJPA universalAccountTableJPA;
-    private LogoutTokenTableJPA logoutTokenTableJPA;
+    private LoginTokenTableJPA loginTokenTableJPA;
 
     private String issuer;
     private Long expires;
+    private Long noActiveExpires;
 
     private ThreadLocal<JwtToken> currentLoginToken = new ThreadLocal<>();
 
@@ -107,22 +108,55 @@ public class JwtManager {
     }
 
     private void check(String tokenStr) throws AccountManagerException {
-        if (hasLogoutToken(tokenStr)) {
+        if (hasLogout(tokenStr)) {
             throw new LogoutException("user has logged out");
         }
     }
 
-    public boolean hasLogoutToken(String tokenStr) {
-        LogoutTokenTableBean tableBean = logoutTokenTableJPA.findByToken(tokenStr);
-        return Objects.nonNull(tableBean);
+    public boolean hasLogout(String tokenStr) {
+        long lastActive = getLastActiveTimestamp(tokenStr);
+        long current = System.currentTimeMillis();
+        return current - lastActive > noActiveExpires.longValue() * 1000;
+    }
+
+    public boolean hasLogout(JwtToken token) {
+        if (token == null) {
+            return true;
+        }
+        return hasLogout(token.getTokenStr());
+    }
+
+    public long getLastActiveTimestamp(String tokenStr) {
+        LoginTokenTableBean tableBean = loginTokenTableJPA.findByToken(tokenStr);
+        if (tableBean == null) {
+            return 0; // never active
+        }
+        return tableBean.getLastActiveTimestamp();
     }
 
     public void setLogoutToken(String tokenStr) throws JPAException {
-        LogoutTokenTableBean tableBean = new LogoutTokenTableBean();
+        LoginTokenTableBean tableBean = new LoginTokenTableBean();
         tableBean.setToken(tokenStr);
-        if (Objects.isNull(logoutTokenTableJPA.saveAndFlush(tableBean))) {
+        tableBean.setLogout();
+        if (Objects.isNull(loginTokenTableJPA.saveAndFlush(tableBean))) {
             throw new JPAException("logout failed");
         }
+    }
+
+    public void setTokenActive(String tokenStr) throws JPAException {
+        LoginTokenTableBean tableBean = loginTokenTableJPA.findByToken(tokenStr);
+        if (tableBean == null) {
+            tableBean = new LoginTokenTableBean();
+            tableBean.setToken(tokenStr);
+        }
+        tableBean.setLastActiveTimestamp(System.currentTimeMillis());
+        if (Objects.isNull(loginTokenTableJPA.saveAndFlush(tableBean))) {
+            throw new JPAException("setTokenActive failed");
+        }
+    }
+
+    public void setTokenActive(JwtToken token) throws JPAException {
+        setTokenActive(token.getTokenStr());
     }
 
     public JwtToken getCurrentLoginToken() {
@@ -146,7 +180,11 @@ public class JwtManager {
         return tokenSec;
     }
 
-    public void setLogoutTokenTableJPA(LogoutTokenTableJPA logoutTokenTableJPA) {
-        this.logoutTokenTableJPA = logoutTokenTableJPA;
+    public void setLoginTokenTableJPA(LoginTokenTableJPA loginTokenTableJPA) {
+        this.loginTokenTableJPA = loginTokenTableJPA;
+    }
+
+    public void setNoActiveExpires(Long noActiveExpires) {
+        this.noActiveExpires = noActiveExpires;
     }
 }

@@ -37,6 +37,11 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
             jwtManager.setCurrentLoginToken(token);
             uaManager.setCurrentLoginUA(token.getAudience());
+
+            if (!jwtManager.hasLogout(token)) {
+                jwtManager.setTokenActive(token);
+            }
+
             // OK!
             chain.doFilter(request, response); // call restful API
 
