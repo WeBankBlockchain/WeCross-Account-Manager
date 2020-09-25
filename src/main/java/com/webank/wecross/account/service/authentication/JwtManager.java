@@ -135,8 +135,11 @@ public class JwtManager {
     }
 
     public void setLogoutToken(String tokenStr) throws JPAException {
-        LoginTokenTableBean tableBean = new LoginTokenTableBean();
-        tableBean.setToken(tokenStr);
+        LoginTokenTableBean tableBean = loginTokenTableJPA.findByToken(tokenStr);
+        if (tableBean == null) {
+            tableBean = new LoginTokenTableBean();
+            tableBean.setToken(tokenStr);
+        }
         tableBean.setLogout();
         if (Objects.isNull(loginTokenTableJPA.saveAndFlush(tableBean))) {
             throw new JPAException("logout failed");
