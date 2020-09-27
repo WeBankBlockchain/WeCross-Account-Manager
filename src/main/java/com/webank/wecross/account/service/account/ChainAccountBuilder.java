@@ -5,7 +5,6 @@ import com.webank.wecross.account.service.config.Default;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
-import com.webank.wecross.account.service.exception.UnknownChainAccountTypeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,23 +13,9 @@ public class ChainAccountBuilder {
 
     public static ChainAccount buildFromTableBean(ChainAccountTableBean tableBean)
             throws AccountManagerException {
-        String type = tableBean.getType();
-        switch (type) {
-            case Default.BCOS_STUB_TYPE:
-                return buildBCOS(tableBean);
-            case Default.BCOS_GM_STUB_TYPE:
-                return buildBCOSGM(tableBean);
-            case Default.FABRIC_STUB_TYPE:
-                return buildFabric(tableBean);
-            default:
-                logger.error("table bean unkown ChainAccount type: " + type);
-                throw new UnknownChainAccountTypeException("Unkown ChainAccount type: " + type);
-        }
-    }
-
-    private static BCOSChainAccount buildBCOS(ChainAccountTableBean tableBean) {
-        BCOSChainAccount account = new BCOSChainAccount();
+        ChainAccount account = new ChainAccount();
         account.setId(tableBean.getId());
+        account.setType(tableBean.getType());
         account.setKeyID(tableBean.getKeyID());
         account.setIdentity(tableBean.getIdentity());
         account.setUsername(tableBean.getUsername());
@@ -38,87 +23,40 @@ public class ChainAccountBuilder {
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getExt0());
-        return account;
-    }
+        account.setExt0(tableBean.getExt0());
+        account.setExt1(tableBean.getExt1());
+        account.setExt2(tableBean.getExt2());
+        account.setExt3(tableBean.getExt3());
 
-    private static BCOSGMChainAccount buildBCOSGM(ChainAccountTableBean tableBean) {
-        BCOSGMChainAccount account = new BCOSGMChainAccount();
-        account.setId(tableBean.getId());
-        account.setKeyID(tableBean.getKeyID());
-        account.setIdentity(tableBean.getIdentity());
-        account.setUsername(tableBean.getUsername());
-        account.setDefault(tableBean.isDefault());
-
-        account.setPubKey(tableBean.getPub());
-        account.setSecKey(tableBean.getSec());
-        account.setAddress(tableBean.getExt0());
-        return account;
-    }
-
-    private static FabricChainAccount buildFabric(ChainAccountTableBean tableBean) {
-        FabricChainAccount account = new FabricChainAccount();
-        account.setId(tableBean.getId());
-        account.setKeyID(tableBean.getKeyID());
-        account.setIdentity(tableBean.getIdentity());
-        account.setUsername(tableBean.getUsername());
-        account.setDefault(tableBean.isDefault());
-
-        account.setCert(tableBean.getPub());
-        account.setKey(tableBean.getSec());
-        account.setMspID(tableBean.getExt0());
         return account;
     }
 
     public static ChainAccount buildFromRequest(AddChainAccountRequest request, String username)
             throws AddChainAccountException {
+        ChainAccount account = new ChainAccount();
+        account.setUsername(username);
+        account.setType(request.getType());
+        account.setPubKey(request.getPubKey());
+        account.setSecKey(request.getSecKey());
+        account.setExt0(request.getExt());
+        account.setDefault(request.getIsDefault());
+
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
-                return buildBCOS(request, username);
+                account.setIdentity(request.getExt());
+                break;
             case Default.BCOS_GM_STUB_TYPE:
-                return buildBCOSGM(request, username);
+                account.setIdentity(request.getExt());
+                break;
             case Default.FABRIC_STUB_TYPE:
-                return buildFabric(request, username);
+                account.setIdentity(request.getPubKey());
+                break;
             default:
                 logger.error("request unkown ChainAccount type: " + type);
                 throw new AddChainAccountException("Unkown ChainAccount type: " + type);
         }
-    }
 
-    private static ChainAccount buildBCOS(AddChainAccountRequest request, String username)
-            throws AddChainAccountException {
-        BCOSChainAccount account = new BCOSChainAccount();
-        account.setUsername(username);
-        account.setDefault(request.getIsDefault().booleanValue());
-        account.setPubKey(request.getPubKey());
-        account.setIdentity(request.getExt());
-        account.setSecKey(request.getSecKey());
-        account.setAddress(request.getExt());
-        return account;
-    }
-
-    private static ChainAccount buildBCOSGM(AddChainAccountRequest request, String username)
-            throws AddChainAccountException {
-        BCOSGMChainAccount account = new BCOSGMChainAccount();
-        account.setUsername(username);
-        account.setDefault(request.getIsDefault().booleanValue());
-        account.setPubKey(request.getPubKey());
-        account.setIdentity(request.getExt());
-        account.setSecKey(request.getSecKey());
-        account.setAddress(request.getExt());
-        return account;
-    }
-
-    private static ChainAccount buildFabric(AddChainAccountRequest request, String username)
-            throws AddChainAccountException {
-        FabricChainAccount account = new FabricChainAccount();
-        account.setUsername(username);
-        account.setDefault(request.getIsDefault().booleanValue());
-        account.setIdentity(request.getPubKey());
-        account.setCert(request.getPubKey());
-        account.setKey(request.getSecKey());
-        account.setMspID(request.getExt());
         return account;
     }
 }

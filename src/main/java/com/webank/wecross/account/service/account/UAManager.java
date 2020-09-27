@@ -92,51 +92,6 @@ public class UAManager {
         return getUA(username);
     }
 
-    // TODO: delete mock
-    public void addMockUA() throws AccountManagerException {
-        String username = "Tom";
-
-        ChainAccount chainAccountBCOS = new BCOSChainAccount();
-        chainAccountBCOS.setKeyID(0);
-        chainAccountBCOS.setUsername(username);
-        chainAccountBCOS.setDefault(true);
-        ((BCOSChainAccount) chainAccountBCOS).setPubKey("xxxpub");
-        ((BCOSChainAccount) chainAccountBCOS).setSecKey("xxxsec");
-        ((BCOSChainAccount) chainAccountBCOS).setAddress("xxxaddr");
-
-        ChainAccount chainAccountBCOSGM = new BCOSGMChainAccount();
-        chainAccountBCOSGM.setKeyID(1);
-        chainAccountBCOSGM.setUsername(username);
-        chainAccountBCOSGM.setDefault(true);
-        ((BCOSGMChainAccount) chainAccountBCOSGM).setPubKey("xxxpub");
-        ((BCOSGMChainAccount) chainAccountBCOSGM).setSecKey("xxxsec");
-        ((BCOSGMChainAccount) chainAccountBCOSGM).setAddress("xxxaddrgm");
-
-        ChainAccount chainAccountFabric = new FabricChainAccount();
-        chainAccountFabric.setKeyID(2);
-        chainAccountFabric.setUsername(username);
-        chainAccountFabric.setDefault(true);
-        ((FabricChainAccount) chainAccountFabric).setCert("xxxcert");
-        ((FabricChainAccount) chainAccountFabric).setKey("xxxkey");
-
-        List<ChainAccount> chainAccounts = new LinkedList<>();
-        chainAccounts.add(chainAccountBCOS);
-        chainAccounts.add(chainAccountBCOSGM);
-        chainAccounts.add(chainAccountFabric);
-
-        UniversalAccount mockUA =
-                UniversalAccount.builder()
-                        .username(username)
-                        .uaID("xxxxuaID")
-                        .pubKey("xxxxxpub")
-                        .password("123456")
-                        .secKey("xxxsec")
-                        .build();
-
-        mockUA.setChainAccounts(chainAccounts);
-        setUA(mockUA);
-    }
-
     public void initAdminUA(String username, String password) throws AccountManagerException {
         setAdminName(username);
         UniversalAccount admin;
