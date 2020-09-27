@@ -91,8 +91,8 @@ public class ChainAccountBuilder {
         BCOSChainAccount account = new BCOSChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-        account.setIdentity(request.getPubKey());
-        account.setPubKey(request.getExt());
+        account.setPubKey(request.getPubKey());
+        account.setIdentity(request.getExt());
         account.setSecKey(request.getSecKey());
         account.setAddress(request.getExt());
         return account;
@@ -103,8 +103,8 @@ public class ChainAccountBuilder {
         BCOSGMChainAccount account = new BCOSGMChainAccount();
         account.setUsername(username);
         account.setDefault(request.getIsDefault().booleanValue());
-        account.setIdentity(request.getPubKey());
-        account.setPubKey(request.getExt());
+        account.setPubKey(request.getPubKey());
+        account.setIdentity(request.getExt());
         account.setSecKey(request.getSecKey());
         account.setAddress(request.getExt());
         return account;
