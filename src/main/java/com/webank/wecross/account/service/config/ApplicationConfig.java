@@ -130,7 +130,7 @@ public class ApplicationConfig {
         public long noActiveExpires;
 
         Auth(Toml toml) throws ConfigurationException {
-            this.name = parseString(toml, "auth.username");
+            this.name = parseString(toml, "auth.name");
             this.expires = parseULong(toml, "auth.expires", 18000); // default 5h
             this.noActiveExpires = parseULong(toml, "auth.noActiveExpires", 600); // default 600s
 
