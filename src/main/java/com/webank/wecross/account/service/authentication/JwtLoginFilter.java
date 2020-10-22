@@ -132,7 +132,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             jwtManager.setTokenActive(jwtToken); // active it during login
             String tokenStr = jwtToken.getTokenStrWithPrefix(); // with prefix
 
-            logger.info("Login success: name:{} credential:{}", username, tokenStr);
+            logger.info("Login success: username:{} credential:{}", username, tokenStr);
 
             response.setCharacterEncoding("UTF-8");
             response.setContentType("text/json;charset=utf-8");

@@ -7,7 +7,7 @@
     sslOn = true
 
 [admin]
-    name = 'org1-admin'
+    username = 'org1-admin'
     password = '123456'
 
 [auth]

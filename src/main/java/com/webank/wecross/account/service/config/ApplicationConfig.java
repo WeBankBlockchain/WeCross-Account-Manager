@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
     sslOn = true
 
 [admin]
-    name = 'org1-admin'
+    username = 'org1-admin'
     password = '123456'
 
 [auth]
     # for issuing token
-    name = 'org1'
+    username = 'org1'
     expires = 18000 # 5 h
     noActiveExpires = 600 # 10 min
 
@@ -104,30 +104,48 @@ public class ApplicationConfig {
     }
 
     class Admin {
-        public String name;
+        public String username;
         public String password;
 
         Admin(Toml toml) throws ConfigurationException {
-            this.name = parseString(toml, "admin.name");
+            try {
+                this.username = parseString(toml, "admin.username");
+            } catch (ConfigurationException e) {
+                this.username = parseString(toml, "admin.name");
+            }
             this.password = parseString(toml, "admin.password");
-            logger.info("Load configuration: " + this.name);
+            logger.info("Load configuration: " + this.username);
         }
 
         @Override
         public String toString() {
-            return "Admin{" + "name='" + name + '\'' + '}';
+            return "Admin{" + "username='" + username + '\'' + '}';
         }
     }
 
     class Auth {
+        public final long EXPIRES_LIMIT = 300000000; // second
         public String name;
         public long expires;
         public long noActiveExpires;
 
         Auth(Toml toml) throws ConfigurationException {
-            this.name = parseString(toml, "auth.name");
-            this.expires = parseLong(toml, "auth.expires", 18000); // default 5h
-            this.noActiveExpires = parseLong(toml, "auth.noActiveExpires", 600); // default 600s
+            this.name = parseString(toml, "auth.username");
+            this.expires = parseULong(toml, "auth.expires", 18000); // default 5h
+            this.noActiveExpires = parseULong(toml, "auth.noActiveExpires", 600); // default 600s
+
+            if (this.expires > EXPIRES_LIMIT) {
+                throw new ConfigurationException(
+                        "auth.expires(" + this.expires + ") must no more than " + EXPIRES_LIMIT);
+            }
+
+            if (this.noActiveExpires > EXPIRES_LIMIT) {
+                throw new ConfigurationException(
+                        "auth.noActiveExpires("
+                                + this.noActiveExpires
+                                + ") must no more than "
+                                + EXPIRES_LIMIT);
+            }
 
             logger.info("Load configuration: " + this.toString());
         }
@@ -135,7 +153,7 @@ public class ApplicationConfig {
         @Override
         public String toString() {
             return "Auth{"
-                    + "name='"
+                    + "username='"
                     + name
                     + '\''
                     + ", expires="
@@ -213,6 +231,15 @@ public class ApplicationConfig {
             return defaultReturn;
         }
         return res.longValue();
+    }
+
+    private static long parseULong(Toml toml, String key, long defaultReturn)
+            throws ConfigurationException {
+        long res = parseLong(toml, key, defaultReturn);
+        if (res < 0) {
+            throw new ConfigurationException("key " + key + " must no less than 0");
+        }
+        return res;
     }
 
     private static String parseString(Toml toml, String key, String defaultReturn) {

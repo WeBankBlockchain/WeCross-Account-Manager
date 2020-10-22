@@ -22,7 +22,7 @@ public class UAManagerConfig {
         UAManager uaManager = new UAManager();
         uaManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         uaManager.setChainAccountTableJPA(chainAccountTableJPA);
-        uaManager.initAdminUA(applicationConfig.admin.name, applicationConfig.admin.password);
+        uaManager.initAdminUA(applicationConfig.admin.username, applicationConfig.admin.password);
 
         // uaManager.addMockUA();
 
