@@ -41,10 +41,14 @@ public class ChainAccountBuilder {
         account.setExt0(request.getExt());
         account.setDefault(request.getIsDefault());
 
+        checkPubKey(account.getPubKey());
+        checkSecKey(account.getSecKey());
+
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
                 account.setIdentity(request.getExt());
+                checkAddressFormat(account.getIdentity());
                 break;
             case Default.BCOS_GM_STUB_TYPE:
                 account.setIdentity(request.getExt());
@@ -58,5 +62,24 @@ public class ChainAccountBuilder {
         }
 
         return account;
+    }
+
+    private static void checkSecKey(String key) throws AddChainAccountException {
+        if (!key.contains("-----BEGIN PRIVATE KEY-----")) {
+            throw new AddChainAccountException("Invalid secret key:" + key);
+        }
+    }
+
+    private static void checkPubKey(String key) throws AddChainAccountException {
+        if (!key.contains("-----BEGIN") || key.contains("PRIVATE")) {
+            throw new AddChainAccountException("Invalid pub key:" + key);
+        }
+    }
+
+    private static void checkAddressFormat(String address) throws AddChainAccountException {
+        if (!address.contains("0x") || address.length() != 42) {
+            throw new AddChainAccountException(
+                    "Invalid address format, address must start with \"0x\" and with 42 characters");
+        }
     }
 }
