@@ -2,7 +2,7 @@
 
 set -e
 
-./gradlew verifyGoogleJavaFormat
-./gradlew build -x test
-./gradlew test -i
-./gradlew jacocoTestReport
+bash gradlew verifyGoogleJavaFormat
+bash gradlew build -x test
+bash gradlew test -i
+bash gradlew jacocoTestReport
