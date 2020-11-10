@@ -19,8 +19,7 @@ jobs:
           java-version: 8
       - uses: mirromutth/mysql-action@v1.1
         with:
-          mysql user: '123456'
-          mysql password: '123456'
+          mysql root password: ''
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
       - name: run ci_integration_check.sh
@@ -40,8 +39,7 @@ jobs:
           java-version: 11
       - uses: mirromutth/mysql-action@v1.1
         with:
-          mysql user: '123456'
-          mysql password: '123456'
+          mysql root password: ''
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
       - name: run ci_integration_check.sh
