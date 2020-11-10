@@ -83,7 +83,7 @@ GET()
 
 test()
 {
-    POST http://localhost:8340/auth/login "" '{"version":"1","data":{"username":"org1-admin","password":"123456"}}' | jq
+    POST http://localhost:8340/auth/login "" '{"version":"1","data":{"username":"org1-admin","password":"123456"}}' 
 }
 
 main()
