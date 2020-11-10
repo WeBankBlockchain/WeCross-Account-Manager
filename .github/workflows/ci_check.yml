@@ -22,8 +22,8 @@ jobs:
       - uses: mirromutth/mysql-action@v1.1
         with:
           mysql root password: '123456'
-      - name: init database
-        run: mysql -u root --password="123456" < src/main/resources/db_setup.sql
+          mysql database: 'wecross_account_manager'
+          collation  server: 'utf8_bin'
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
         env:
@@ -50,8 +50,8 @@ jobs:
       - uses: mirromutth/mysql-action@v1.1
         with:
           mysql root password: '123456'
-      - name: init database
-        run: mysql -u root --password="123456" < src/main/resources/db_setup.sql
+          mysql database: 'wecross_account_manager'
+          collation  server: 'utf8_bin'
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
         env:
