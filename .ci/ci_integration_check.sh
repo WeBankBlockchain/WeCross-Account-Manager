@@ -4,6 +4,7 @@ set -e
 
 ROOT=$(pwd)
 DIST=${ROOT}/dist/
+DB_PASSWORD=${CI_DB_PASSWORD}
 
 LOG_INFO()
 {
@@ -32,6 +33,7 @@ config()
     cp -f application-sample.toml application.toml
     # sslOn = false
     sed_i 's/true/false/g' application.toml
+    sed_i "/password/s/''/'${DB_PASSWORD}'/g" application.toml
     cat application.toml
 
     LOG_INFO "Configure application.properties"

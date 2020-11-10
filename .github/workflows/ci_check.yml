@@ -19,11 +19,15 @@ jobs:
           java-version: 8
       - uses: mirromutth/mysql-action@v1.1
         with:
-          mysql root password: ''
+          mysql root password: '123456'
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
+        env:
+          CI_DB_PASSWORD : '123456'
       - name: run ci_integration_check.sh
         run: bash .ci/ci_integration_check.sh
+        env:
+          CI_DB_PASSWORD: '123456'
       - name: upload coverage
         run: bash <(curl -s https://codecov.io/bash)
   jdk11:
@@ -39,10 +43,14 @@ jobs:
           java-version: 11
       - uses: mirromutth/mysql-action@v1.1
         with:
-          mysql root password: ''
+          mysql root password: '123456'
       - name: run ci_check.sh
         run: bash .ci/ci_check.sh
+        env:
+          CI_DB_PASSWORD : '123456'
       - name: run ci_integration_check.sh
         run: bash .ci/ci_integration_check.sh
+        env:
+          CI_DB_PASSWORD: '123456'
       - name: upload coverage
         run: bash <(curl -s https://codecov.io/bash)
