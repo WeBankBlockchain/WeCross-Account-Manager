@@ -4,6 +4,7 @@ set -e
 
 ROOT=$(pwd)
 DIST=${ROOT}/dist/
+DB_PASSWORD=${CI_DB_PASSWORD}
 
 LOG_INFO()
 {
@@ -32,6 +33,7 @@ config()
     cp -f application-sample.toml application.toml
     # sslOn = false
     sed_i 's/true/false/g' application.toml
+    sed_i "/password/s/''/'${DB_PASSWORD}'/g" application.toml
     cat application.toml
 
     LOG_INFO "Configure application.properties"
@@ -81,7 +83,7 @@ GET()
 
 test()
 {
-    POST http://localhost:8340/auth/login "" '{"version":"1","data":{"username":"org1-admin","password":"123456"}}' | jq
+    POST http://localhost:8340/auth/login "" '{"version":"1","data":{"username":"org1-admin","password":"123456"}}'
 }
 
 main()
