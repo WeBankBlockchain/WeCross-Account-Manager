@@ -11,6 +11,7 @@ import com.webank.wecross.account.service.account.UniversalAccountBuilder;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
+import com.webank.wecross.account.service.authentication.packet.ImageAuthCodeResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
 import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
@@ -20,7 +21,12 @@ import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
 import com.webank.wecross.account.service.exception.RegisterException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
+import com.webank.wecross.account.service.image.authcode.ImageAuthCode;
+import com.webank.wecross.account.service.image.authcode.ImageAuthCodeCreator;
+import com.webank.wecross.account.service.image.authcode.ImageAuthCodeManager;
 import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ServiceController {
+    private static Logger logger = LoggerFactory.getLogger(ServiceController.class);
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public ServiceController() {
@@ -84,6 +92,7 @@ public class ServiceController {
                     objectMapper.readValue(
                             params, new TypeReference<RestRequest<RegisterRequest>>() {});
         } catch (Exception e) {
+            logger.error("e: ", e);
             restResponse = RestResponse.newFailed(e.getMessage());
             return restResponse;
         }
@@ -96,6 +105,41 @@ public class ServiceController {
 
             String username = registerRequest.getUsername();
             String password = registerRequest.getPassword();
+            String imageCode = registerRequest.getImageAuthCode();
+            String imageToken = registerRequest.getImageToken();
+
+            if (imageToken == null) {
+                logger.error(
+                        " invalid request, imageToken field not exist, request: {}",
+                        registerRequest);
+                throw new RuntimeException("invalid request, \"imageToken\" field not exist");
+            }
+
+            /** check if imageToken ok */
+            ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
+            ImageAuthCode imageAuthCode = imageAuthCodeManager.get(imageToken);
+            if (imageAuthCode == null) {
+                logger.error(
+                        "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
+                throw new RuntimeException("image auth token not exist, token: " + imageToken);
+            }
+
+            if (imageAuthCode.isExpired()) {
+                logger.error("image auth token expired, token:{}", imageAuthCode);
+                imageAuthCodeManager.remove(imageToken);
+                throw new RuntimeException("image auth token expired, token: " + imageToken);
+            }
+
+            if (!imageAuthCode.getCode().equals(imageCode)) {
+                logger.error("image auth code not match, request: {}", imageAuthCode);
+                throw new RuntimeException(
+                        "image auth code not match, request: "
+                                + imageCode
+                                + ", expect: "
+                                + imageAuthCode.getCode());
+            }
+
+            imageAuthCodeManager.remove(imageToken);
 
             UAManager uaManager = serviceContext.getUaManager();
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
@@ -112,10 +156,45 @@ public class ServiceController {
             restResponse.setData(registerResponse);
 
         } catch (Exception e) {
+            logger.error("e: ", e);
             RegisterResponse registerResponse =
                     RegisterResponse.builder().errorCode(1).message(e.getMessage()).build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(registerResponse);
+        }
+        return restResponse;
+    }
+
+    @RequestMapping(value = "/auth/imageAuthCode", method = RequestMethod.GET)
+    private Object imageAuthCode() {
+        RestResponse restResponse;
+
+        try {
+
+            ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
+            ImageAuthCode imageAuthCode = ImageAuthCodeCreator.createImageAuthCode();
+            imageAuthCodeManager.add(imageAuthCode);
+
+            ImageAuthCodeResponse.ImageAuthCodeInfo imageAuthCodeInfo =
+                    new ImageAuthCodeResponse.ImageAuthCodeInfo();
+            imageAuthCodeInfo.setImageBase64(imageAuthCode.getImageBase64());
+            imageAuthCodeInfo.setImageToken(imageAuthCode.getToken());
+
+            ImageAuthCodeResponse imageAuthCodeResponse =
+                    ImageAuthCodeResponse.builder()
+                            .errorCode(0)
+                            .imageAuthCodeInfo(imageAuthCodeInfo)
+                            .message("success")
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(imageAuthCodeResponse);
+
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            ImageAuthCodeResponse imageAuthCodeResponse =
+                    ImageAuthCodeResponse.builder().errorCode(1).message(e.getMessage()).build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(imageAuthCodeResponse);
         }
         return restResponse;
     }

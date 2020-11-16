@@ -32,7 +32,10 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/auth/register"); // TODO: use one configure in cors()
+        web.ignoring()
+                .antMatchers(
+                        "/auth/register",
+                        "/auth/imageAuthCode"); // TODO: use one configure in cors()
     }
 
     @Override
