@@ -47,13 +47,16 @@ public class ChainAccountBuilder {
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
+                checkAddressFormat(request.getExt());
                 account.setIdentity(request.getExt());
-                checkAddressFormat(account.getIdentity());
                 break;
             case Default.BCOS_GM_STUB_TYPE:
+                checkAddressFormat(request.getExt());
                 account.setIdentity(request.getExt());
                 break;
             case Default.FABRIC_STUB_TYPE:
+                checkCertificatePem(request.getPubKey());
+                checkMSPID(request.getExt());
                 account.setIdentity(request.getPubKey());
                 break;
             default:
@@ -65,7 +68,7 @@ public class ChainAccountBuilder {
     }
 
     private static void checkSecKey(String key) throws AddChainAccountException {
-        if (!key.contains("-----BEGIN PRIVATE KEY-----")) {
+        if (!key.contains("-----BEGIN PRIVATE KEY-----") || !key.contains("-----END PRIVATE KEY-----")) {
             throw new AddChainAccountException("Invalid secret key:" + key);
         }
     }
@@ -80,6 +83,18 @@ public class ChainAccountBuilder {
         if (!address.contains("0x") || address.length() != 42) {
             throw new AddChainAccountException(
                     "Invalid address format, address must start with \"0x\" and with 42 characters");
+        }
+    }
+
+    private static void checkMSPID(String mspID) throws AddChainAccountException {
+        if (mspID == null || mspID.length() == 0) {
+            throw new AddChainAccountException("MSPID is empty!");
+        }
+    }
+
+    private static void checkCertificatePem(String content) throws AddChainAccountException {
+        if (!content.contains("-----BEGIN CERTIFICATE-----") || !content.contains("-----END CERTIFICATE-----")) {
+            throw new AddChainAccountException("Invalid certificate file:" + content);
         }
     }
 }
