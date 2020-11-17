@@ -5,11 +5,38 @@ import com.webank.wecross.account.service.config.Default;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ChainAccountBuilder {
     private static Logger logger = LoggerFactory.getLogger(ChainAccountBuilder.class);
+
+    private static final Pattern CERT_PATTERN =
+            Pattern.compile(
+                    "-+BEGIN\\s+.*CERTIFICATE[^-]*-+(?:\\s|\\r|\\n)+"
+                            + // Header
+                            "([A-Za-z0-9+/=\\r\\n]+)"
+                            + // Base64 text
+                            "-+END\\s+.*CERTIFICATE[^-]*-+", // Footer
+                    Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern SEC_KEY_PATTERN =
+            Pattern.compile(
+                    "-+BEGIN\\s+.*PRIVATE\\s+KEY[^-]*-+(?:\\s|\\r|\\n)+"
+                            + // Header
+                            "([A-Za-z0-9+/=\\r\\n]+)"
+                            + // Base64 text
+                            "-+END\\s+.*PRIVATE\\s+KEY[^-]*-+", // Footer
+                    Pattern.CASE_INSENSITIVE);
+    private static final Pattern PUB_KEY_PATTERN =
+            Pattern.compile(
+                    "-+BEGIN\\s+.*PUBLIC\\s+KEY[^-]*-+(?:\\s|\\r|\\n)+"
+                            + // Header
+                            "([A-Za-z0-9+/=\\r\\n]+)"
+                            + // Base64 text
+                            "-+END\\s+.*PUBLIC\\s+KEY[^-]*-+", // Footer
+                    Pattern.CASE_INSENSITIVE);
 
     public static ChainAccount buildFromTableBean(ChainAccountTableBean tableBean)
             throws AccountManagerException {
@@ -41,19 +68,23 @@ public class ChainAccountBuilder {
         account.setExt0(request.getExt());
         account.setDefault(request.getIsDefault());
 
-        checkPubKey(account.getPubKey());
         checkSecKey(account.getSecKey());
 
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
+                checkPubKey(request.getPubKey());
+                checkAddressFormat(request.getExt());
                 account.setIdentity(request.getExt());
-                checkAddressFormat(account.getIdentity());
                 break;
             case Default.BCOS_GM_STUB_TYPE:
+                checkPubKey(request.getPubKey());
+                checkAddressFormat(request.getExt());
                 account.setIdentity(request.getExt());
                 break;
             case Default.FABRIC_STUB_TYPE:
+                checkCertificatePem(request.getPubKey());
+                checkMSPID(request.getExt());
                 account.setIdentity(request.getPubKey());
                 break;
             default:
@@ -65,14 +96,20 @@ public class ChainAccountBuilder {
     }
 
     private static void checkSecKey(String key) throws AddChainAccountException {
-        if (!key.contains("-----BEGIN PRIVATE KEY-----")) {
+        if (!SEC_KEY_PATTERN.matcher(key).find()) {
             throw new AddChainAccountException("Invalid secret key:" + key);
         }
     }
 
     private static void checkPubKey(String key) throws AddChainAccountException {
-        if (!key.contains("-----BEGIN") || key.contains("PRIVATE")) {
+        if (!PUB_KEY_PATTERN.matcher(key).find()) {
             throw new AddChainAccountException("Invalid pub key:" + key);
+        }
+    }
+
+    private static void checkCertificatePem(String content) throws AddChainAccountException {
+        if (!CERT_PATTERN.matcher(content).find()) {
+            throw new AddChainAccountException("Invalid certificate file:" + content);
         }
     }
 
@@ -80,6 +117,12 @@ public class ChainAccountBuilder {
         if (!address.contains("0x") || address.length() != 42) {
             throw new AddChainAccountException(
                     "Invalid address format, address must start with \"0x\" and with 42 characters");
+        }
+    }
+
+    private static void checkMSPID(String mspID) throws AddChainAccountException {
+        if (mspID == null || mspID.length() == 0) {
+            throw new AddChainAccountException("MSPID is empty!");
         }
     }
 }
