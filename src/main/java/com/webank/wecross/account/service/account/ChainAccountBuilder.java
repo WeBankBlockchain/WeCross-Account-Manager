@@ -68,7 +68,8 @@ public class ChainAccountBuilder {
     }
 
     private static void checkSecKey(String key) throws AddChainAccountException {
-        if (!key.contains("-----BEGIN PRIVATE KEY-----") || !key.contains("-----END PRIVATE KEY-----")) {
+        if (!key.contains("-----BEGIN PRIVATE KEY-----")
+                || !key.contains("-----END PRIVATE KEY-----")) {
             throw new AddChainAccountException("Invalid secret key:" + key);
         }
     }
@@ -93,7 +94,8 @@ public class ChainAccountBuilder {
     }
 
     private static void checkCertificatePem(String content) throws AddChainAccountException {
-        if (!content.contains("-----BEGIN CERTIFICATE-----") || !content.contains("-----END CERTIFICATE-----")) {
+        if (!content.contains("-----BEGIN CERTIFICATE-----")
+                || !content.contains("-----END CERTIFICATE-----")) {
             throw new AddChainAccountException("Invalid certificate file:" + content);
         }
     }
