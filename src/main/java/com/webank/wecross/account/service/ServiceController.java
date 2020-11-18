@@ -130,7 +130,7 @@ public class ServiceController {
                 throw new RuntimeException("image auth token expired, token: " + imageToken);
             }
 
-            if (!imageAuthCode.getCode().equals(imageCode)) {
+            if (!imageAuthCode.getCode().equalsIgnoreCase(imageCode)) {
                 logger.error("image auth code not match, request: {}", imageAuthCode);
                 throw new RuntimeException(
                         "image auth code not match, request: "
