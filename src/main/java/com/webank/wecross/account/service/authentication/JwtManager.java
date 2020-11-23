@@ -12,6 +12,8 @@ import com.webank.wecross.account.service.exception.LogoutException;
 import com.webank.wecross.account.service.exception.UANotFoundException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,10 @@ public class JwtManager {
         String secret = getUATokenSec(accountName);
 
         Algorithm algorithm = Algorithm.HMAC256(secret);
+
+        Map<String, Object> headerClaims = new HashMap();
+        headerClaims.put("iatmill", System.currentTimeMillis()); // support generate in millis
+
         String tokenStr =
                 JWT.create()
                         .withIssuer(issuer)
@@ -54,6 +60,7 @@ public class JwtManager {
                         .withIssuedAt(startTime)
                         .withNotBefore(startTime)
                         .withExpiresAt(expiresTime)
+                        .withHeader(headerClaims)
                         .sign(algorithm);
         token = new JwtToken(tokenStr);
 

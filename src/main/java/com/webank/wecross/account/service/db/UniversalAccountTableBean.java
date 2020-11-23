@@ -38,4 +38,6 @@ public class UniversalAccountTableBean {
 
     @Column(columnDefinition = "text")
     private String ext;
+
+    @Column private Integer latestKeyID;
 }

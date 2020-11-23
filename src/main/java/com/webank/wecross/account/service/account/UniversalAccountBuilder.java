@@ -35,6 +35,7 @@ public class UniversalAccountBuilder {
                         .password(tableBean.getPassword())
                         .tokenSec(tableBean.getTokenSec())
                         .secKey(tableBean.getSec())
+                        .latestKeyID(tableBean.getLatestKeyID())
                         .build();
         ua.setChainAccounts(chainAccounts);
         return ua;
