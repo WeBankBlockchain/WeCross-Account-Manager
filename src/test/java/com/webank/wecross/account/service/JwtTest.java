@@ -82,9 +82,9 @@ public class JwtTest {
     public void concurrentTest() throws Exception {
 
         JwtManager jwtManager = jwtManagerConfig.newJwtManager();
-        JwtToken token = jwtManager.newToken("aaa");
+        JwtToken token = jwtManager.newToken("org1-admin");
         for (int i = 0; i < 10; i++) {
-            JwtToken newToken = jwtManager.newToken("aaa");
+            JwtToken newToken = jwtManager.newToken("org1-admin");
             Assert.assertNotEquals(token, newToken);
             token = newToken;
         }
