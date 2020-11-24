@@ -202,11 +202,14 @@ public class ServiceController {
         return restResponse;
     }
 
-    @RequestMapping(value = "/auth/hasLogin", produces = "application/json")
-    private Object hasLogin(@RequestBody String params) {
+    @RequestMapping(value = "/auth/getUAVersion", produces = "application/json")
+    private Object getUAVersion(@RequestBody String params) {
         // if goes here, the user has login and token has not expired
+
+        Long uaVersion = serviceContext.getUaManager().getCurrentLoginUA().getVersion();
+
         RestResponse restResponse = RestResponse.newSuccess();
-        restResponse.setData(null);
+        restResponse.setData(uaVersion);
         return restResponse;
     }
 

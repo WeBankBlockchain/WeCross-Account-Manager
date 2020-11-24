@@ -41,6 +41,8 @@ public class UniversalAccount {
 
     @JsonIgnore private int latestKeyID;
 
+    private final Long version; // The state of ua, update by db automatically
+
     @Setter
     public void setChainAccounts(List<ChainAccount> chainAccounts) {
         if (type2ChainAccounts == null) {
@@ -229,6 +231,7 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+        private Long version;
 
         @JsonProperty("isAdmin")
         private boolean isAdmin;
@@ -245,6 +248,7 @@ public class UniversalAccount {
         details.setSecKey(secKey);
         details.setRole(role);
         details.setAdmin(isAdmin);
+        details.setVersion(version);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
         for (Map.Entry<String, Map<Integer, ChainAccount>> t2cas : type2ChainAccounts.entrySet()) {
@@ -272,6 +276,7 @@ public class UniversalAccount {
         tableBean.setSec(secKey);
         tableBean.setRole(role);
         tableBean.setLatestKeyID(latestKeyID);
+        tableBean.setVersion(version);
         return tableBean;
     }
 }

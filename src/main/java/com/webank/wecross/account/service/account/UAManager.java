@@ -54,6 +54,7 @@ public class UAManager {
         }
 
         try {
+            universalAccountTableBean.setUpdateTimestamp(System.currentTimeMillis());
             universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
         } catch (Exception e) {
             throw new JPAException("set ua failed: " + e.getMessage());
