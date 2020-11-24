@@ -77,4 +77,16 @@ public class JwtTest {
             Assert.assertTrue(true);
         }
     }
+
+    @Test
+    public void concurrentTest() throws Exception {
+
+        JwtManager jwtManager = jwtManagerConfig.newJwtManager();
+        JwtToken token = jwtManager.newToken("aaa");
+        for (int i = 0; i < 10; i++) {
+            JwtToken newToken = jwtManager.newToken("aaa");
+            Assert.assertNotEquals(token, newToken);
+            token = newToken;
+        }
+    }
 }
