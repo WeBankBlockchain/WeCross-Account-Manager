@@ -54,6 +54,7 @@ public class UAManager {
         }
 
         try {
+            universalAccountTableBean.setUpdateTimestamp(System.currentTimeMillis());
             universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
         } catch (Exception e) {
             throw new JPAException("set ua failed: " + e.getMessage());
@@ -61,6 +62,12 @@ public class UAManager {
         try {
 
             chainAccountTableJPA.saveAll(chainAccountTableBeanList);
+
+            while (!ua.getChainAccounts2Remove().isEmpty()) {
+                ChainAccount ca2Remove = ua.getChainAccounts2Remove().peek();
+                chainAccountTableJPA.deleteById(ca2Remove.getId());
+                ua.getChainAccounts2Remove().remove(ca2Remove);
+            }
 
         } catch (Exception e) {
             throw new JPAException(

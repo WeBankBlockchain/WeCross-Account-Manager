@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
+import com.webank.wecross.account.service.exception.RemoveChainAccountException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import jdk.nashorn.internal.objects.annotations.Getter;
 import jdk.nashorn.internal.objects.annotations.Setter;
 import lombok.Builder;
@@ -34,6 +36,12 @@ public class UniversalAccount {
     @JsonIgnore private String role;
 
     @JsonIgnore private Map<String, Map<Integer, ChainAccount>> type2ChainAccounts;
+
+    @JsonIgnore private Queue<ChainAccount> chainAccounts2Remove;
+
+    @JsonIgnore private int latestKeyID;
+
+    private final Long version; // The state of ua, update by db automatically
 
     @Setter
     public void setChainAccounts(List<ChainAccount> chainAccounts) {
@@ -83,8 +91,44 @@ public class UniversalAccount {
             chainAccount.setDefault(true);
         }
 
-        chainAccount.setKeyID(new Integer(getChainAccounts().size()));
+        chainAccount.setKeyID(latestKeyID++);
         chainAccountMap.putIfAbsent(chainAccount.getKeyID(), chainAccount);
+    }
+
+    public void removeChainAccount(Integer id, String type) throws RemoveChainAccountException {
+        if (type2ChainAccounts == null) {
+            throw new RemoveChainAccountException(
+                    "Chain account not found, id: " + id + " type: " + type);
+        }
+
+        if (!type2ChainAccounts.containsKey(type)) {
+            throw new RemoveChainAccountException(
+                    "Chain account not found, id: " + id + " type: " + type);
+        }
+
+        Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(type);
+        ChainAccount caRemoved = chainAccountMap.remove(id);
+        if (caRemoved == null) {
+            throw new RemoveChainAccountException(
+                    "Chain account not found, id: " + id + " type: " + type);
+        } // else remove success
+
+        if (caRemoved.isDefault) {
+            // Choose smallest id to be the next default
+            ChainAccount ca2Default = null;
+            for (ChainAccount ca : chainAccountMap.values()) {
+                if (ca2Default == null || ca2Default.getId() > ca.getId()) {
+                    ca2Default = ca;
+                }
+            }
+
+            if (ca2Default != null) {
+                ca2Default.setDefault(true);
+            }
+        }
+
+        // Add 2 removed list
+        getChainAccounts2Remove().offer(caRemoved);
     }
 
     public void setChainAccount(ChainAccount chainAccount) throws SetChainAccountException {
@@ -153,6 +197,13 @@ public class UniversalAccount {
         return null;
     }
 
+    public Queue<ChainAccount> getChainAccounts2Remove() {
+        if (chainAccounts2Remove == null) {
+            chainAccounts2Remove = new LinkedList<>();
+        }
+        return chainAccounts2Remove;
+    }
+
     @Data
     public class Info {
         private String username;
@@ -180,6 +231,7 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+        private Long version;
 
         @JsonProperty("isAdmin")
         private boolean isAdmin;
@@ -196,6 +248,7 @@ public class UniversalAccount {
         details.setSecKey(secKey);
         details.setRole(role);
         details.setAdmin(isAdmin);
+        details.setVersion(version);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
         for (Map.Entry<String, Map<Integer, ChainAccount>> t2cas : type2ChainAccounts.entrySet()) {
@@ -222,6 +275,8 @@ public class UniversalAccount {
         tableBean.setTokenSec(tokenSec);
         tableBean.setSec(secKey);
         tableBean.setRole(role);
+        tableBean.setLatestKeyID(latestKeyID);
+        tableBean.setVersion(version);
         return tableBean;
     }
 }

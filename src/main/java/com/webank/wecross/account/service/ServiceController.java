@@ -15,11 +15,14 @@ import com.webank.wecross.account.service.authentication.packet.ImageAuthCodeRes
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
 import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
+import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountRequest;
+import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.AddChainAccountException;
 import com.webank.wecross.account.service.exception.RegisterException;
+import com.webank.wecross.account.service.exception.RemoveChainAccountException;
 import com.webank.wecross.account.service.exception.SetChainAccountException;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCode;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCodeCreator;
@@ -199,11 +202,14 @@ public class ServiceController {
         return restResponse;
     }
 
-    @RequestMapping(value = "/auth/hasLogin", produces = "application/json")
-    private Object hasLogin(@RequestBody String params) {
+    @RequestMapping(value = "/auth/getUAVersion", produces = "application/json")
+    private Object getUAVersion(@RequestBody String params) {
         // if goes here, the user has login and token has not expired
+
+        Long uaVersion = serviceContext.getUaManager().getCurrentLoginUA().getVersion();
+
         RestResponse restResponse = RestResponse.newSuccess();
-        restResponse.setData(null);
+        restResponse.setData(uaVersion);
         return restResponse;
     }
 
@@ -297,6 +303,62 @@ public class ServiceController {
                     AddChainAccountResponse.builder().errorCode(1).message(e.getMessage()).build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(addChainAccountResponse);
+        }
+        return restResponse;
+    }
+
+    private void checkRemoveChainAccountRequest(RemoveChainAccountRequest request)
+            throws RemoveChainAccountException {
+        if (request.getType() == null) {
+            throw new RemoveChainAccountException("type has not given");
+        }
+
+        if (request.getKeyID() == null) {
+            throw new RemoveChainAccountException("pubKey has not given");
+        }
+    }
+
+    @RequestMapping(
+            value = "/auth/removeChainAccount",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object removeChainAccount(@RequestBody String params) {
+        RestRequest<RemoveChainAccountRequest> restRequest;
+        RestResponse restResponse;
+        try {
+            restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<RemoveChainAccountRequest>>() {});
+        } catch (Exception e) {
+            restResponse = RestResponse.newFailed(e.getMessage());
+            return restResponse;
+        }
+
+        try {
+
+            RemoveChainAccountRequest removeChainAccountRequest = restRequest.getData();
+            checkRemoveChainAccountRequest(removeChainAccountRequest);
+
+            Integer keyID = removeChainAccountRequest.getKeyID();
+            String type = removeChainAccountRequest.getType();
+
+            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+            ua.removeChainAccount(keyID, type);
+
+            serviceContext.getUaManager().setUA(ua); // update to db
+
+            RemoveChainAccountResponse removeChainAccountResponse =
+                    RemoveChainAccountResponse.builder().errorCode(0).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(removeChainAccountResponse);
+        } catch (Exception e) {
+            RemoveChainAccountResponse removeChainAccountResponse =
+                    RemoveChainAccountResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(removeChainAccountResponse);
         }
         return restResponse;
     }
