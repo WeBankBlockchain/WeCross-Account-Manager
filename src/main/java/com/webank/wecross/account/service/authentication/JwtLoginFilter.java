@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.account.service.RestRequest;
 import com.webank.wecross.account.service.RestResponse;
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.utils.CommonUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -85,9 +87,19 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
             LoginRequest loginRequest = parseLoginRequest(request);
 
+            UniversalAccount ua = uaManager.getUA(loginRequest.getUsername());
+            logger.info(
+                    "username: {}, password: {}, salt: {}",
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword(),
+                    ua.getSalt());
+            String username = loginRequest.getUsername();
+            String password =
+                    CommonUtility.generateMixedPwdWithSalt(
+                            loginRequest.getPassword(), ua.getSalt());
+
             return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(username, password));
         } catch (Exception e) {
             try {
                 logger.error("Login exception: ", e);

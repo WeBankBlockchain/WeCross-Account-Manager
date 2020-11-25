@@ -124,7 +124,8 @@ public class ServiceController {
             if (imageAuthCode == null) {
                 logger.error(
                         "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
-                throw new RuntimeException("image auth token not exist, token: " + imageToken);
+                throw new RuntimeException(
+                        "image auth token timeout or not exist, token: " + imageToken);
             }
 
             if (imageAuthCode.isExpired()) {

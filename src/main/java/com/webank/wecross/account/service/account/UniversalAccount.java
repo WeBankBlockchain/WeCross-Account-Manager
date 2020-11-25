@@ -29,6 +29,8 @@ public class UniversalAccount {
 
     @JsonIgnore private String password;
 
+    @JsonIgnore private String salt;
+
     @JsonIgnore private String tokenSec;
 
     @JsonIgnore private String secKey;
@@ -272,6 +274,7 @@ public class UniversalAccount {
         tableBean.setUaID(uaID);
         tableBean.setPub(pubKey);
         tableBean.setPassword(password);
+        tableBean.setSalt(salt);
         tableBean.setTokenSec(tokenSec);
         tableBean.setSec(secKey);
         tableBean.setRole(role);
