@@ -13,6 +13,5 @@ public class RegisterResponse {
     public int errorCode;
     public String message;
 
-    public String credential;
     public UniversalAccount.Info universalAccount;
 }

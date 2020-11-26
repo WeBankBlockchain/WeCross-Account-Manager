@@ -202,23 +202,18 @@ public class ServiceController {
             if (imageAuthCode == null) {
                 logger.error(
                         "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
-                throw new RuntimeException(
-                        "image auth token timeout or not exist, token: " + imageToken);
+                throw new RuntimeException("image auth token timeout or not exist");
             }
 
             if (imageAuthCode.isExpired()) {
                 logger.error("image auth token expired, token:{}", imageAuthCode);
                 imageAuthCodeManager.remove(imageToken);
-                throw new RuntimeException("image auth token expired, token: " + imageToken);
+                throw new RuntimeException("image auth token expired");
             }
 
             if (!imageAuthCode.getCode().equalsIgnoreCase(imageCode)) {
                 logger.error("image auth code not match, request: {}", imageAuthCode);
-                throw new RuntimeException(
-                        "image auth code not match, request: "
-                                + imageCode
-                                + ", expect: "
-                                + imageAuthCode.getCode());
+                throw new RuntimeException("image auth code not match");
             }
 
             imageAuthCodeManager.remove(imageToken);
