@@ -22,10 +22,8 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.exception.AddChainAccountException;
-import com.webank.wecross.account.service.exception.RegisterException;
-import com.webank.wecross.account.service.exception.RemoveChainAccountException;
-import com.webank.wecross.account.service.exception.SetChainAccountException;
+import com.webank.wecross.account.service.exception.ErrorCode;
+import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCode;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCodeCreator;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCodeManager;
@@ -66,42 +64,47 @@ public class ServiceController {
     private void checkModifyPasswordRequest(ModifyPasswordRequest request)
             throws AccountManagerException {
         if (request.getUsername() == null) {
-            throw new RegisterException("username has not given");
+            throw new RequestParametersException("username has not given");
         }
 
         if (request.getUsername().length() > 256) {
-            throw new RegisterException("username is too long, limit 256");
+            throw new RequestParametersException("username is too long, limit 256");
         }
 
         if (request.getOldPassword().length() > 256) {
-            throw new RegisterException("old password is too long, limit 256");
+            throw new RequestParametersException("old password is too long, limit 256");
         }
 
         if (request.getNewPassword().length() > 256) {
-            throw new RegisterException("new password is too long, limit 256");
+            throw new RequestParametersException("new password is too long, limit 256");
         }
     }
 
     private void checkRegisterRequest(RegisterRequest request) throws AccountManagerException {
         if (request.getUsername() == null) {
-            throw new RegisterException("username has not given");
+            throw new RequestParametersException("username has not given");
         }
 
         if (request.getPassword() == null) {
-            throw new RegisterException("password has not given");
+            throw new RequestParametersException("password has not given");
+        }
+
+        if (request.getImageToken() == null) {
+            throw new RequestParametersException("image auth token has not given");
         }
 
         if (request.getUsername().length() > 256) {
-            throw new RegisterException("username is too long, limit 256");
+            throw new RequestParametersException("username is too long, limit 256");
         }
 
         if (request.getPassword().length() > 256) {
-            throw new RegisterException("password is too long, limit 256");
+            throw new RequestParametersException("password is too long, limit 256");
         }
 
         UAManager uaManager = serviceContext.getUaManager();
         if (uaManager.isUAExist(request.getUsername())) {
-            throw new RegisterException(
+            throw new AccountManagerException(
+                    ErrorCode.UAAccountExist.getErrorCode(),
                     "user '" + request.getUsername() + "' has already been registered");
         }
     }
@@ -111,23 +114,16 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object modifyPassword(@RequestBody String params) {
-        RestRequest<ModifyPasswordRequest> restRequest;
-        RestResponse restResponse = null;
+        RestResponse restResponse = RestResponse.newSuccess();
         try {
-            restRequest =
+
+            RestRequest<ModifyPasswordRequest> restRequest =
                     objectMapper.readValue(
                             params, new TypeReference<RestRequest<ModifyPasswordRequest>>() {});
-        } catch (Exception e) {
-            logger.error("e: ", e);
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
 
-        ModifyPasswordRequest modifyPasswordRequest = restRequest.getData();
-        try {
+            ModifyPasswordRequest modifyPasswordRequest = restRequest.getData();
 
             logger.info("ModifyPasswordRequest: {}", modifyPasswordRequest);
-
             checkModifyPasswordRequest(modifyPasswordRequest);
 
             UniversalAccount ua =
@@ -147,14 +143,22 @@ public class ServiceController {
 
             ModifyPasswordResponse modifyPasswordResponse =
                     ModifyPasswordResponse.builder().errorCode(0).message("success").build();
-            restResponse = RestResponse.newSuccess();
             restResponse.setData(modifyPasswordResponse);
 
+        } catch (AccountManagerException e) {
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder()
+                            .errorCode(e.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse.setData(modifyPasswordResponse);
         } catch (Exception e) {
             logger.error("e: ", e);
             ModifyPasswordResponse modifyPasswordResponse =
-                    ModifyPasswordResponse.builder().errorCode(1).message(e.getMessage()).build();
-            restResponse = RestResponse.newSuccess();
+                    ModifyPasswordResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
             restResponse.setData(modifyPasswordResponse);
         }
 
@@ -166,19 +170,13 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object register(@RequestBody String params) {
-        RestRequest<RegisterRequest> restRequest;
-        RestResponse restResponse;
+
+        RestResponse restResponse = RestResponse.newSuccess();
         try {
-            restRequest =
+
+            RestRequest<RegisterRequest> restRequest =
                     objectMapper.readValue(
                             params, new TypeReference<RestRequest<RegisterRequest>>() {});
-        } catch (Exception e) {
-            logger.error("e: ", e);
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
-
-        try {
 
             RegisterRequest registerRequest = restRequest.getData();
 
@@ -189,31 +187,29 @@ public class ServiceController {
             String imageCode = registerRequest.getImageAuthCode();
             String imageToken = registerRequest.getImageToken();
 
-            if (imageToken == null) {
-                logger.error(
-                        " invalid request, imageToken field not exist, request: {}",
-                        registerRequest);
-                throw new RuntimeException("invalid request, \"imageToken\" field not exist");
-            }
-
             /** check if imageToken ok */
             ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
             ImageAuthCode imageAuthCode = imageAuthCodeManager.get(imageToken);
             if (imageAuthCode == null) {
                 logger.error(
                         "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
-                throw new RuntimeException("image auth token timeout or not exist");
+                throw new AccountManagerException(
+                        ErrorCode.ImageAuthTokenNotExist.getErrorCode(),
+                        "image auth token not found");
             }
 
             if (imageAuthCode.isExpired()) {
                 logger.error("image auth token expired, token:{}", imageAuthCode);
                 imageAuthCodeManager.remove(imageToken);
-                throw new RuntimeException("image auth token expired");
+                throw new AccountManagerException(
+                        ErrorCode.ImageAuthTokenExpired.getErrorCode(), "image auth token expired");
             }
 
             if (!imageAuthCode.getCode().equalsIgnoreCase(imageCode)) {
                 logger.error("image auth code not match, request: {}", imageAuthCode);
-                throw new RuntimeException("image auth code not match");
+                throw new AccountManagerException(
+                        ErrorCode.ImageAuthTokenNotMatch.getErrorCode(),
+                        "image auth code does not match");
             }
 
             imageAuthCodeManager.remove(imageToken);
@@ -229,14 +225,23 @@ public class ServiceController {
                             .universalAccount(newUA.toInfo())
                             .message("success")
                             .build();
-            restResponse = RestResponse.newSuccess();
+
             restResponse.setData(registerResponse);
 
+        } catch (AccountManagerException e) {
+            RegisterResponse registerResponse =
+                    RegisterResponse.builder()
+                            .errorCode(e.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse.setData(registerResponse);
         } catch (Exception e) {
             logger.error("e: ", e);
             RegisterResponse registerResponse =
-                    RegisterResponse.builder().errorCode(1).message(e.getMessage()).build();
-            restResponse = RestResponse.newSuccess();
+                    RegisterResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
             restResponse.setData(registerResponse);
         }
         return restResponse;
@@ -247,7 +252,6 @@ public class ServiceController {
         RestResponse restResponse;
 
         try {
-
             ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
             ImageAuthCode imageAuthCode = ImageAuthCodeCreator.createImageAuthCode();
             imageAuthCodeManager.add(imageAuthCode);
@@ -269,7 +273,10 @@ public class ServiceController {
         } catch (Exception e) {
             logger.error("e: ", e);
             ImageAuthCodeResponse imageAuthCodeResponse =
-                    ImageAuthCodeResponse.builder().errorCode(1).message(e.getMessage()).build();
+                    ImageAuthCodeResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(imageAuthCodeResponse);
         }
@@ -313,7 +320,7 @@ public class ServiceController {
         } catch (AccountManagerException e) {
             logoutResponse =
                     LogoutResponse.builder()
-                            .errorCode(LogoutResponse.ERROR)
+                            .errorCode(e.getErrorCode())
                             .message(e.getMessage())
                             .build();
         }
@@ -325,19 +332,19 @@ public class ServiceController {
     private void checkAddChainAccountRequest(AddChainAccountRequest request)
             throws AccountManagerException {
         if (request.getType() == null) {
-            throw new AddChainAccountException("type has not given");
+            throw new RequestParametersException("type has not given");
         }
 
         if (request.getPubKey() == null) {
-            throw new AddChainAccountException("pubKey has not given");
+            throw new RequestParametersException("pubKey has not given");
         }
 
         if (request.getSecKey() == null) {
-            throw new AddChainAccountException("secKey has not given");
+            throw new RequestParametersException("secKey has not given");
         }
 
         if (request.getIsDefault() == null) {
-            throw new AddChainAccountException("isDefault has not given");
+            throw new RequestParametersException("isDefault has not given");
         }
     }
 
@@ -382,13 +389,13 @@ public class ServiceController {
     }
 
     private void checkRemoveChainAccountRequest(RemoveChainAccountRequest request)
-            throws RemoveChainAccountException {
+            throws RequestParametersException {
         if (request.getType() == null) {
-            throw new RemoveChainAccountException("type has not given");
+            throw new RequestParametersException("type has not given");
         }
 
         if (request.getKeyID() == null) {
-            throw new RemoveChainAccountException("pubKey has not given");
+            throw new RequestParametersException("pubKey has not given");
         }
     }
 
@@ -438,13 +445,13 @@ public class ServiceController {
     }
 
     private void checkSetDefaultAccountRequest(SetDefaultAccountRequest request)
-            throws SetChainAccountException {
+            throws RequestParametersException {
         if (request.getType() == null) {
-            throw new SetChainAccountException("type has not given");
+            throw new RequestParametersException("type has not given");
         }
 
         if (request.getKeyID() == null) {
-            throw new SetChainAccountException("pubKey has not given");
+            throw new RequestParametersException("pubKey has not given");
         }
     }
 
@@ -475,11 +482,14 @@ public class ServiceController {
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
             ChainAccount chainAccount = ua.getChainAccountByKeyID(keyID);
             if (chainAccount == null) {
-                throw new SetChainAccountException("keyID " + keyID.intValue() + " not found");
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountNotExist.getErrorCode(),
+                        "keyID " + keyID.intValue() + " not found");
             }
 
             if (!chainAccount.getType().equals(type)) {
-                throw new SetChainAccountException(
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountTypeNotFound.getErrorCode(),
                         "keyID " + keyID.intValue() + " of type " + type + " not found");
             }
 
@@ -541,7 +551,7 @@ public class ServiceController {
 
             String identity = restRequest.getData().identity;
             if (identity == null || identity.length() == 0) {
-                throw new AccountManagerException("identity is not given");
+                throw new RequestParametersException("identity is not given");
             }
 
             UniversalAccount ua = serviceContext.getUaManager().getUAByChainAccount(identity);

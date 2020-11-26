@@ -262,13 +262,14 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Toml toml, String key, String defaultReturn) {
         try {
             return parseString(toml, key);
         } catch (ConfigurationException e) {
             return defaultReturn;
         }
-    }
+    }*/
 
     private static String parseString(Toml toml, String key) throws ConfigurationException {
         String res = toml.getString(key);
@@ -280,6 +281,7 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Map<String, String> map, String key)
             throws ConfigurationException {
         String res = map.get(key);
@@ -290,6 +292,7 @@ public class ApplicationConfig {
         }
         return res;
     }
+    */
 
     private static String parseStringBase(Map<String, Object> map, String key)
             throws ConfigurationException {

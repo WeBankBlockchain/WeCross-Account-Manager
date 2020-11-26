@@ -3,7 +3,7 @@ package com.webank.wecross.account.service.account;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.exception.NewUAException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.utils.CommonUtility;
 import com.webank.wecross.account.service.utils.SM2;
 import java.security.KeyPair;
@@ -99,7 +99,8 @@ public class UniversalAccountBuilder {
             return ua;
         } catch (Exception e) {
             logger.error("New UA failed: " + e);
-            throw new NewUAException(e.getMessage());
+            throw new AccountManagerException(
+                    ErrorCode.NewUAException.getErrorCode(), e.getMessage());
         }
     }
 
