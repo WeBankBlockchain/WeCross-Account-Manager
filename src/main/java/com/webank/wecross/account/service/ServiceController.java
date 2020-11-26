@@ -13,6 +13,8 @@ import com.webank.wecross.account.service.authentication.packet.AddChainAccountR
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.ImageAuthCodeResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
+import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
+import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
 import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountRequest;
@@ -27,6 +29,8 @@ import com.webank.wecross.account.service.exception.SetChainAccountException;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCode;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCodeCreator;
 import com.webank.wecross.account.service.image.authcode.ImageAuthCodeManager;
+import com.webank.wecross.account.service.utils.CommonUtility;
+import java.util.UUID;
 import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +63,25 @@ public class ServiceController {
     }
     */
 
+    private void checkModifyPasswordRequest(ModifyPasswordRequest request)
+            throws AccountManagerException {
+        if (request.getUsername() == null) {
+            throw new RegisterException("username has not given");
+        }
+
+        if (request.getUsername().length() > 256) {
+            throw new RegisterException("username is too long, limit 256");
+        }
+
+        if (request.getOldPassword().length() > 256) {
+            throw new RegisterException("old password is too long, limit 256");
+        }
+
+        if (request.getNewPassword().length() > 256) {
+            throw new RegisterException("new password is too long, limit 256");
+        }
+    }
+
     private void checkRegisterRequest(RegisterRequest request) throws AccountManagerException {
         if (request.getUsername() == null) {
             throw new RegisterException("username has not given");
@@ -81,6 +104,61 @@ public class ServiceController {
             throw new RegisterException(
                     "user '" + request.getUsername() + "' has already been registered");
         }
+    }
+
+    @RequestMapping(
+            value = "/auth/modifyPassword",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object modifyPassword(@RequestBody String params) {
+        RestRequest<ModifyPasswordRequest> restRequest;
+        RestResponse restResponse = null;
+        try {
+            restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<ModifyPasswordRequest>>() {});
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            restResponse = RestResponse.newFailed(e.getMessage());
+            return restResponse;
+        }
+
+        ModifyPasswordRequest modifyPasswordRequest = restRequest.getData();
+        try {
+
+            logger.info("ModifyPasswordRequest: {}", modifyPasswordRequest);
+
+            checkModifyPasswordRequest(modifyPasswordRequest);
+
+            UniversalAccount ua =
+                    serviceContext.getUaManager().getUA(modifyPasswordRequest.getUsername());
+            String passwordWithSalt =
+                    CommonUtility.generateMixedPwdWithSalt(ua.getPassword(), ua.getSalt());
+            if (!passwordWithSalt.equals(ua.getPassword())) {
+                throw new RuntimeException("password incorrect.");
+            }
+
+            ua.setPassword(
+                    CommonUtility.generateMixedPwdWithSalt(
+                            modifyPasswordRequest.getNewPassword(), UUID.randomUUID().toString()));
+
+            // update password
+            serviceContext.getUaManager().setUA(ua);
+
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder().errorCode(0).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(modifyPasswordResponse);
+
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder().errorCode(1).message(e.getMessage()).build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(modifyPasswordResponse);
+        }
+
+        return restResponse;
     }
 
     @RequestMapping(
