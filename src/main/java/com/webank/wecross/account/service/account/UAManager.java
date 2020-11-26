@@ -6,6 +6,7 @@ import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.JPAException;
+import com.webank.wecross.account.service.exception.UndefinedErrorException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -107,12 +108,12 @@ public class UAManager {
 
             logger.info("Found adminUA. Check: {}", username);
             if (!admin.getUsername().equals(username)) {
-                throw new AccountManagerException("Invalid adminUA usernmame: " + username);
+                throw new UndefinedErrorException("Invalid adminUA username: " + username);
             }
 
             if (!admin.getPassword().equals(password)) {
                 System.out.println("Invalid adminUA password, please check.");
-                throw new AccountManagerException("Invalid adminUA password, please check.");
+                throw new UndefinedErrorException("Invalid adminUA password, please check.");
             }
 
         } catch (UsernameNotFoundException e) {
