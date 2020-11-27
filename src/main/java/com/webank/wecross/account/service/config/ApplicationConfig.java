@@ -115,18 +115,18 @@ public class ApplicationConfig {
             }
             this.password = parseString(toml, "admin.password");
 
-            if (this.username.length() > 256) {
+            if (this.username.length() >= 256) {
                 throw new ConfigurationException(
                         "admin.username(length:"
                                 + this.username.length()
-                                + ") must no more than 256");
+                                + ") must smaller than 256");
             }
 
-            if (this.password.length() > 256) {
+            if (this.password.length() >= 256) {
                 throw new ConfigurationException(
                         "admin.password(length:"
                                 + this.password.length()
-                                + ") must no more than 256");
+                                + ") must smaller than 256");
             }
 
             logger.info("Load configuration: " + this.username);
@@ -149,9 +149,9 @@ public class ApplicationConfig {
             this.expires = parseULong(toml, "auth.expires", 18000); // default 5h
             this.noActiveExpires = parseULong(toml, "auth.noActiveExpires", 600); // default 600s
 
-            if (this.name.length() > 256) {
+            if (this.name.length() >= 256) {
                 throw new ConfigurationException(
-                        "auth.name(length:" + this.name.length() + ") must no more than 256");
+                        "auth.name(length:" + this.name.length() + ") must smaller than 256");
             }
 
             if (this.expires > EXPIRES_LIMIT) {
