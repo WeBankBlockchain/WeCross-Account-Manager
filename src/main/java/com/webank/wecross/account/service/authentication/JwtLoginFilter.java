@@ -11,9 +11,12 @@ import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
+import com.webank.wecross.account.service.utils.RSAUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Base64;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -66,17 +69,32 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private LoginRequest parseLoginRequest(HttpServletRequest request) throws Exception {
         String body = getBodyString(request);
 
-        RestRequest<LoginRequest> restRequest =
-                objectMapper.readValue(body, new TypeReference<RestRequest<LoginRequest>>() {});
+        /** The requested data is encrypted by RSA, first decrypt the data */
+        RestRequest<String> restRequest =
+                objectMapper.readValue(body, new TypeReference<RestRequest<String>>() {});
 
-        LoginRequest loginRequest = restRequest.getData();
+        if (logger.isDebugEnabled()) {
+            logger.debug("base64 login params: {}", restRequest.getData());
+        }
+
+        byte[] bytesParams =
+                RSAUtility.decrypt(
+                        Base64.getDecoder().decode(restRequest.getData().getBytes()),
+                        rsaKeyPairManager.getKeyPair().getPrivate());
+
+        LoginRequest loginRequest =
+                objectMapper.readValue(bytesParams, new TypeReference<LoginRequest>() {});
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("login params: {}", loginRequest);
+        }
 
         if (loginRequest.getUsername() == null) {
-            throw new Exception("username not found");
+            throw new RequestParametersException("username not found");
         }
 
         if (loginRequest.getPassword() == null) {
-            throw new Exception("password not found");
+            throw new RequestParametersException("password not found");
         }
 
         return loginRequest;
@@ -91,11 +109,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             LoginRequest loginRequest = parseLoginRequest(request);
 
             UniversalAccount ua = uaManager.getUA(loginRequest.getUsername());
-            logger.info(
-                    "username: {}, password: {}, salt: {}",
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword(),
-                    ua.getSalt());
+            logger.info("username: {}, salt: {}", loginRequest.getUsername(), ua.getSalt());
             String username = loginRequest.getUsername();
             String password =
                     PassWordUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
