@@ -1,10 +1,10 @@
 package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.image.authcode.ImageAuthCodeManager;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.annotation.Resource;
@@ -34,11 +34,10 @@ public class UAManagerConfig {
     }
 
     @Bean
-    public ImageAuthCodeManager newImageAuthCodeManager() {
+    public AuthCodeManager newAuthCodeManager() {
         ScheduledExecutorService scheduledExecutorService =
-                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("ImageAuthCode-"));
-        ImageAuthCodeManager imageAuthCodeManager =
-                new ImageAuthCodeManager(scheduledExecutorService);
-        return imageAuthCodeManager;
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("AuthCode-"));
+        AuthCodeManager authCodeManager = new AuthCodeManager(scheduledExecutorService);
+        return authCodeManager;
     }
 }

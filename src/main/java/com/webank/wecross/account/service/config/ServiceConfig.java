@@ -35,6 +35,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
         web.ignoring()
                 .antMatchers(
                         "/auth/register",
+                        "/auth/pub",
                         "/auth/imageAuthCode"); // TODO: use one configure in cors()
     }
 

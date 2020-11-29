@@ -8,10 +8,13 @@ import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
+import com.webank.wecross.account.service.authcode.AuthCode;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
+import com.webank.wecross.account.service.authcode.ImageCodeCreator;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
-import com.webank.wecross.account.service.authentication.packet.ImageAuthCodeResponse;
+import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
@@ -24,9 +27,6 @@ import com.webank.wecross.account.service.authentication.packet.SetDefaultAccoun
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
-import com.webank.wecross.account.service.image.authcode.ImageAuthCode;
-import com.webank.wecross.account.service.image.authcode.ImageAuthCodeCreator;
-import com.webank.wecross.account.service.image.authcode.ImageAuthCodeManager;
 import com.webank.wecross.account.service.utils.CommonUtility;
 import java.util.UUID;
 import javax.annotation.Resource;
@@ -128,14 +128,13 @@ public class ServiceController {
 
             UniversalAccount ua =
                     serviceContext.getUaManager().getUA(modifyPasswordRequest.getUsername());
-            String passwordWithSalt =
-                    CommonUtility.generateMixedPwdWithSalt(ua.getPassword(), ua.getSalt());
+            String passwordWithSalt = CommonUtility.mixPassWithSalt(ua.getPassword(), ua.getSalt());
             if (!passwordWithSalt.equals(ua.getPassword())) {
                 throw new RuntimeException("password incorrect.");
             }
 
             ua.setPassword(
-                    CommonUtility.generateMixedPwdWithSalt(
+                    CommonUtility.mixPassWithSalt(
                             modifyPasswordRequest.getNewPassword(), UUID.randomUUID().toString()));
 
             // update password
@@ -184,12 +183,12 @@ public class ServiceController {
 
             String username = registerRequest.getUsername();
             String password = registerRequest.getPassword();
-            String imageCode = registerRequest.getImageAuthCode();
+            String imageCode = registerRequest.getAuthCode();
             String imageToken = registerRequest.getImageToken();
 
             /** check if imageToken ok */
-            ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
-            ImageAuthCode imageAuthCode = imageAuthCodeManager.get(imageToken);
+            AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
+            AuthCode imageAuthCode = authCodeManager.get(imageToken);
             if (imageAuthCode == null) {
                 logger.error(
                         "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
@@ -200,7 +199,7 @@ public class ServiceController {
 
             if (imageAuthCode.isExpired()) {
                 logger.error("image auth token expired, token:{}", imageAuthCode);
-                imageAuthCodeManager.remove(imageToken);
+                authCodeManager.remove(imageToken);
                 throw new AccountManagerException(
                         ErrorCode.ImageAuthTokenExpired.getErrorCode(), "image auth token expired");
             }
@@ -212,7 +211,7 @@ public class ServiceController {
                         "image auth code does not match");
             }
 
-            imageAuthCodeManager.remove(imageToken);
+            authCodeManager.remove(imageToken);
 
             UAManager uaManager = serviceContext.getUaManager();
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
@@ -247,24 +246,23 @@ public class ServiceController {
         return restResponse;
     }
 
-    @RequestMapping(value = "/auth/imageAuthCode", method = RequestMethod.GET)
-    private Object imageAuthCode() {
+    @RequestMapping(value = "/auth/authCode", method = RequestMethod.GET)
+    private Object getAuthCode() {
         RestResponse restResponse;
 
         try {
-            ImageAuthCodeManager imageAuthCodeManager = serviceContext.getImageAuthCodeManager();
-            ImageAuthCode imageAuthCode = ImageAuthCodeCreator.createImageAuthCode();
-            imageAuthCodeManager.add(imageAuthCode);
+            AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
+            AuthCode imageAuthCode = ImageCodeCreator.createAuthCode();
+            authCodeManager.add(imageAuthCode);
 
-            ImageAuthCodeResponse.ImageAuthCodeInfo imageAuthCodeInfo =
-                    new ImageAuthCodeResponse.ImageAuthCodeInfo();
+            AuthCodeResponse.AuthCodeInfo imageAuthCodeInfo = new AuthCodeResponse.AuthCodeInfo();
             imageAuthCodeInfo.setImageBase64(imageAuthCode.getImageBase64());
-            imageAuthCodeInfo.setImageToken(imageAuthCode.getToken());
+            imageAuthCodeInfo.setRandomToken(imageAuthCode.getToken());
 
-            ImageAuthCodeResponse imageAuthCodeResponse =
-                    ImageAuthCodeResponse.builder()
+            AuthCodeResponse imageAuthCodeResponse =
+                    AuthCodeResponse.builder()
                             .errorCode(0)
-                            .imageAuthCodeInfo(imageAuthCodeInfo)
+                            .authCode(imageAuthCodeInfo)
                             .message("success")
                             .build();
             restResponse = RestResponse.newSuccess();
@@ -272,8 +270,8 @@ public class ServiceController {
 
         } catch (Exception e) {
             logger.error("e: ", e);
-            ImageAuthCodeResponse imageAuthCodeResponse =
-                    ImageAuthCodeResponse.builder()
+            AuthCodeResponse imageAuthCodeResponse =
+                    AuthCodeResponse.builder()
                             .errorCode(ErrorCode.UndefinedError.getErrorCode())
                             .message(e.getMessage())
                             .build();
