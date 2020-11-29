@@ -7,6 +7,7 @@ import com.webank.wecross.account.service.RestRequest;
 import com.webank.wecross.account.service.RestResponse;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
@@ -34,11 +35,13 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private AuthenticationManager authenticationManager;
     private JwtManager jwtManager;
     private UAManager uaManager;
+    private RSAKeyPairManager rsaKeyPairManager;
 
     public JwtLoginFilter(
             AuthenticationManager authenticationManager,
             JwtManager jwtManager,
-            UAManager uaManager) {
+            UAManager uaManager,
+            RSAKeyPairManager rsaKeyPairManager) {
         this.authenticationManager = authenticationManager;
         this.jwtManager = jwtManager;
         this.uaManager = uaManager;
