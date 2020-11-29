@@ -30,6 +30,7 @@ import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
+import com.webank.wecross.account.service.utils.RSAUtility;
 import java.util.Base64;
 import java.util.UUID;
 import javax.annotation.Resource;
@@ -176,12 +177,26 @@ public class ServiceController {
 
         RestResponse restResponse = RestResponse.newSuccess();
         try {
+            /** The requested data is encrypted by RSA, first decrypt the data */
+            RestRequest<String> restRequest =
+                    objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
 
-            RestRequest<RegisterRequest> restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<RegisterRequest>>() {});
+            if (logger.isDebugEnabled()) {
+                logger.debug("base64 register params: {}", restRequest.getData());
+            }
 
-            RegisterRequest registerRequest = restRequest.getData();
+            RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
+            byte[] bytesParams =
+                    RSAUtility.decrypt(
+                            Base64.getDecoder().decode(restRequest.getData().getBytes()),
+                            keyPair.getKeyPair().getPrivate());
+
+            RegisterRequest registerRequest =
+                    objectMapper.readValue(bytesParams, new TypeReference<RegisterRequest>() {});
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("register params: {}", registerRequest);
+            }
 
             checkRegisterRequest(registerRequest);
 

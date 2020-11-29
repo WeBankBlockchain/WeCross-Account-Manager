@@ -2,6 +2,7 @@ package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UADetailsService;
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtAuthenticationFilter;
 import com.webank.wecross.account.service.authentication.JwtLoginFilter;
 import com.webank.wecross.account.service.authentication.JwtManager;
@@ -24,6 +25,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
     @Resource UADetailsService uaDetailsService;
     @Resource JwtManager jwtManager;
     @Resource UAManager uaManager;
+    @Resource RSAKeyPairManager rsaKeyPairManager;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -42,7 +44,8 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter =
-                new JwtLoginFilter(authenticationManager(), jwtManager, uaManager);
+                new JwtLoginFilter(
+                        authenticationManager(), jwtManager, uaManager, rsaKeyPairManager);
         JwtAuthenticationFilter jwtAuthenticationFilter =
                 new JwtAuthenticationFilter(authenticationManager(), jwtManager, uaManager);
 
