@@ -10,7 +10,7 @@ import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.utils.CommonUtility;
+import com.webank.wecross.account.service.utils.PassWordUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -95,7 +95,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                     ua.getSalt());
             String username = loginRequest.getUsername();
             String password =
-                    CommonUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
+                    PassWordUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
 
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));

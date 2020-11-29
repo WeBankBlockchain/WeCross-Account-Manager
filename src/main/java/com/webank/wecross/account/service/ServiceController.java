@@ -11,6 +11,7 @@ import com.webank.wecross.account.service.account.UniversalAccountBuilder;
 import com.webank.wecross.account.service.authcode.AuthCode;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.ImageCodeCreator;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
@@ -18,6 +19,7 @@ import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
+import com.webank.wecross.account.service.authentication.packet.PubResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
 import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountRequest;
@@ -27,7 +29,8 @@ import com.webank.wecross.account.service.authentication.packet.SetDefaultAccoun
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
-import com.webank.wecross.account.service.utils.CommonUtility;
+import com.webank.wecross.account.service.utils.PassWordUtility;
+import java.util.Base64;
 import java.util.UUID;
 import javax.annotation.Resource;
 import org.slf4j.Logger;
@@ -128,13 +131,14 @@ public class ServiceController {
 
             UniversalAccount ua =
                     serviceContext.getUaManager().getUA(modifyPasswordRequest.getUsername());
-            String passwordWithSalt = CommonUtility.mixPassWithSalt(ua.getPassword(), ua.getSalt());
+            String passwordWithSalt =
+                    PassWordUtility.mixPassWithSalt(ua.getPassword(), ua.getSalt());
             if (!passwordWithSalt.equals(ua.getPassword())) {
                 throw new RuntimeException("password incorrect.");
             }
 
             ua.setPassword(
-                    CommonUtility.mixPassWithSalt(
+                    PassWordUtility.mixPassWithSalt(
                             modifyPasswordRequest.getNewPassword(), UUID.randomUUID().toString()));
 
             // update password
@@ -243,6 +247,31 @@ public class ServiceController {
                             .build();
             restResponse.setData(registerResponse);
         }
+        return restResponse;
+    }
+
+    @RequestMapping(value = "/auth/pub", method = RequestMethod.GET)
+    private Object getPub() {
+        RestResponse restResponse = null;
+        try {
+            RSAKeyPairManager rsaKeyPairManager = serviceContext.getRsaKeyPairManager();
+            String pub =
+                    Base64.getEncoder()
+                            .encodeToString(
+                                    rsaKeyPairManager.getKeyPair().getPublic().getEncoded());
+
+            PubResponse pubResponse =
+                    PubResponse.builder().errorCode(0).pub(pub).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(pubResponse);
+            if (logger.isDebugEnabled()) {
+                logger.debug("pub: {}", pubResponse.toString());
+            }
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            restResponse = RestResponse.newFailed(e.getMessage());
+        }
+
         return restResponse;
     }
 

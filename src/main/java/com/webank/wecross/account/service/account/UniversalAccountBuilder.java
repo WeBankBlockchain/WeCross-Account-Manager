@@ -4,7 +4,7 @@ import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
-import com.webank.wecross.account.service.utils.CommonUtility;
+import com.webank.wecross.account.service.utils.PassWordUtility;
 import com.webank.wecross.account.service.utils.SM2;
 import java.security.KeyPair;
 import java.security.SecureRandom;
@@ -82,7 +82,7 @@ public class UniversalAccountBuilder {
                             .pubKey(pub)
                             .uaID(pub)
                             .role("User")
-                            .password(CommonUtility.mixPassWithSalt(password, salt))
+                            .password(PassWordUtility.mixPassWithSalt(password, salt))
                             .salt(salt)
                             .tokenSec(tokenSec)
                             .secKey(sec)
