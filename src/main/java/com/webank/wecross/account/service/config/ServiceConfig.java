@@ -36,7 +36,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(
                         "/auth/register",
                         "/auth/pub",
-                        "/auth/imageAuthCode"); // TODO: use one configure in cors()
+                        "/auth/authCode"); // TODO: use one configure in cors()
     }
 
     @Override

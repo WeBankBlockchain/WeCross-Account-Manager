@@ -2,7 +2,7 @@ package com.webank.wecross.account.service.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-public class CommonUtility {
+public class PassWordUtility {
     /**
      * Use the salt mix the password
      *

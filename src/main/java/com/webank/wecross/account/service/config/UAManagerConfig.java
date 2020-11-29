@@ -2,9 +2,13 @@ package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.utils.RSAUtility;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.annotation.Resource;
@@ -39,5 +43,14 @@ public class UAManagerConfig {
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("AuthCode-"));
         AuthCodeManager authCodeManager = new AuthCodeManager(scheduledExecutorService);
         return authCodeManager;
+    }
+
+    @Bean
+    public RSAKeyPairManager newRSAKeyPairManager() throws NoSuchAlgorithmException {
+        RSAKeyPairManager rsaKeyPairManager = new RSAKeyPairManager();
+        // TODO, load rsa private key
+        KeyPair keyPair = RSAUtility.buildKeyPair();
+        rsaKeyPairManager.setKeyPair(keyPair);
+        return rsaKeyPairManager;
     }
 }
