@@ -5,24 +5,22 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ImageAuthCodeResponse {
-    public static final int SUCCESS = 0;
-    public static final int ERROR = 1;
+public class AuthCodeResponse {
 
     public int errorCode;
     public String message;
-    public ImageAuthCodeInfo imageAuthCodeInfo;
+    public AuthCodeInfo authCode;
 
-    public static class ImageAuthCodeInfo {
-        private String imageToken;
+    public static class AuthCodeInfo {
+        private String randomToken;
         private String imageBase64;
 
-        public String getImageToken() {
-            return imageToken;
+        public String getRandomToken() {
+            return randomToken;
         }
 
-        public void setImageToken(String imageToken) {
-            this.imageToken = imageToken;
+        public void setRandomToken(String randomToken) {
+            this.randomToken = randomToken;
         }
 
         public String getImageBase64() {

@@ -95,8 +95,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                     ua.getSalt());
             String username = loginRequest.getUsername();
             String password =
-                    CommonUtility.generateMixedPwdWithSalt(
-                            loginRequest.getPassword(), ua.getSalt());
+                    CommonUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
 
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));

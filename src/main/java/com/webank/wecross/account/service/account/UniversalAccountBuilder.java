@@ -82,7 +82,7 @@ public class UniversalAccountBuilder {
                             .pubKey(pub)
                             .uaID(pub)
                             .role("User")
-                            .password(CommonUtility.generateMixedPwdWithSalt(password, salt))
+                            .password(CommonUtility.mixPassWithSalt(password, salt))
                             .salt(salt)
                             .tokenSec(tokenSec)
                             .secKey(sec)

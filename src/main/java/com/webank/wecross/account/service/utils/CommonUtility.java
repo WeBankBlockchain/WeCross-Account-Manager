@@ -10,7 +10,7 @@ public class CommonUtility {
      * @param salt
      * @return
      */
-    public static String generateMixedPwdWithSalt(String pwd, String salt) {
+    public static String mixPassWithSalt(String pwd, String salt) {
         // Hash(salt + Hash(pwd))
         return DigestUtils.sha256Hex(salt + DigestUtils.sha256Hex(pwd));
     }

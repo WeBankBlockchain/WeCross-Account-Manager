@@ -1,8 +1,8 @@
-package com.webank.wecross.account.service.image.authcode;
+package com.webank.wecross.account.service.authcode;
 
 import java.time.LocalDateTime;
 
-public class ImageAuthCode {
+public class AuthCode {
     private String token;
     private String code;
     private String imageBase64;
@@ -65,7 +65,7 @@ public class ImageAuthCode {
 
     @Override
     public String toString() {
-        return "ImageAuthCode{"
+        return "AuthCode{"
                 + "token='"
                 + token
                 + '\''

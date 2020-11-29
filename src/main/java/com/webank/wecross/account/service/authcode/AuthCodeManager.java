@@ -1,4 +1,4 @@
-package com.webank.wecross.account.service.image.authcode;
+package com.webank.wecross.account.service.authcode;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,18 +7,18 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImageAuthCodeManager {
+public class AuthCodeManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(ImageAuthCodeManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthCodeManager.class);
 
-    private final Map<String, ImageAuthCode> imageAuthCodeMap = new ConcurrentHashMap<>();
+    private final Map<String, AuthCode> authCodeMap = new ConcurrentHashMap<>();
     private ScheduledExecutorService scheduledExecutorService = null;
 
-    public ImageAuthCodeManager(ScheduledExecutorService scheduledExecutorService) {
+    public AuthCodeManager(ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
         this.scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
-                    cleanExpiredTokens();
+                    cleanExpiredCodes();
                 },
                 30000,
                 90000,
@@ -26,13 +26,13 @@ public class ImageAuthCodeManager {
     }
 
     /** Clean up expired tokens */
-    private void cleanExpiredTokens() {
-        for (Map.Entry<String, ImageAuthCode> entry : imageAuthCodeMap.entrySet()) {
+    private void cleanExpiredCodes() {
+        for (Map.Entry<String, AuthCode> entry : authCodeMap.entrySet()) {
             String key = entry.getKey();
-            ImageAuthCode pictureAuthCode = entry.getValue();
+            AuthCode pictureAuthCode = entry.getValue();
             if (pictureAuthCode.isExpired()) {
-                logger.info("ImageAuthCode expired, value = {}", entry.getKey());
-                imageAuthCodeMap.remove(key);
+                logger.info("AuthCode expired, value = {}", entry.getKey());
+                authCodeMap.remove(key);
             }
         }
         if (logger.isDebugEnabled()) {
@@ -40,19 +40,19 @@ public class ImageAuthCodeManager {
         }
     }
 
-    public void add(ImageAuthCode pictureAuthCode) {
-        imageAuthCodeMap.put(pictureAuthCode.getToken(), pictureAuthCode);
+    public void add(AuthCode pictureAuthCode) {
+        authCodeMap.put(pictureAuthCode.getToken(), pictureAuthCode);
         logger.debug("add {}", pictureAuthCode);
     }
 
-    public ImageAuthCode get(String token) {
-        ImageAuthCode pictureAuthCode = imageAuthCodeMap.get(token);
+    public AuthCode get(String token) {
+        AuthCode pictureAuthCode = authCodeMap.get(token);
         logger.debug("get token: {}", token);
         return pictureAuthCode;
     }
 
     public void remove(String token) {
-        imageAuthCodeMap.remove(token);
+        authCodeMap.remove(token);
         logger.debug("remove token: {}", token);
     }
 }
