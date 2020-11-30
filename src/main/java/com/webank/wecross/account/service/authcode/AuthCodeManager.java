@@ -40,15 +40,15 @@ public class AuthCodeManager {
         }
     }
 
-    public void add(AuthCode pictureAuthCode) {
-        authCodeMap.put(pictureAuthCode.getToken(), pictureAuthCode);
-        logger.debug("add {}", pictureAuthCode);
+    public void add(AuthCode authCode) {
+        authCodeMap.put(authCode.getToken(), authCode);
+        logger.debug("add {}", authCode);
     }
 
     public AuthCode get(String token) {
-        AuthCode pictureAuthCode = authCodeMap.get(token);
+        AuthCode authCode = authCodeMap.get(token);
         logger.debug("get token: {}", token);
-        return pictureAuthCode;
+        return authCode;
     }
 
     public void remove(String token) {

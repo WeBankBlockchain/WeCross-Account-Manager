@@ -7,6 +7,7 @@ import com.webank.wecross.account.service.RestRequest;
 import com.webank.wecross.account.service.RestResponse;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
@@ -39,15 +40,19 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private JwtManager jwtManager;
     private UAManager uaManager;
     private RSAKeyPairManager rsaKeyPairManager;
+    private AuthCodeManager authCodeManager;
 
     public JwtLoginFilter(
             AuthenticationManager authenticationManager,
             JwtManager jwtManager,
             UAManager uaManager,
+            AuthCodeManager authCodeManager,
             RSAKeyPairManager rsaKeyPairManager) {
         this.authenticationManager = authenticationManager;
         this.jwtManager = jwtManager;
         this.uaManager = uaManager;
+        this.rsaKeyPairManager = rsaKeyPairManager;
+        this.authCodeManager = authCodeManager;
         super.setFilterProcessesUrl(loginPath);
 
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -73,9 +78,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         RestRequest<String> restRequest =
                 objectMapper.readValue(body, new TypeReference<RestRequest<String>>() {});
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("base64 login params: {}", restRequest.getData());
-        }
+        //        if (logger.isDebugEnabled()) {
+        //            logger.debug("base64 login params: {}", restRequest.getData());
+        //        }
 
         byte[] bytesParams =
                 RSAUtility.decrypt(
@@ -97,6 +102,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new RequestParametersException("password not found");
         }
 
+        if (loginRequest.getRandomToken() == null) {
+            throw new RequestParametersException("random token not found");
+        }
+
         return loginRequest;
     }
 
@@ -108,14 +117,20 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
             LoginRequest loginRequest = parseLoginRequest(request);
 
-            UniversalAccount ua = uaManager.getUA(loginRequest.getUsername());
+            String username = loginRequest.getUsername().trim();
+            String password = loginRequest.getPassword().trim();
+            String imageToken = loginRequest.getRandomToken();
+            String authCode = loginRequest.getAuthCode();
+
+            UniversalAccount ua = uaManager.getUA(username);
+
             logger.info("username: {}, salt: {}", loginRequest.getUsername(), ua.getSalt());
-            String username = loginRequest.getUsername();
-            String password =
+
+            String mixedPassword =
                     PassWordUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
 
             return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
+                    new UsernamePasswordAuthenticationToken(username, mixedPassword));
         } catch (Exception e) {
             try {
                 logger.error("Login exception: ", e);

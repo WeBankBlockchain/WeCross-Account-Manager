@@ -2,6 +2,7 @@ package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UADetailsService;
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtAuthenticationFilter;
 import com.webank.wecross.account.service.authentication.JwtLoginFilter;
@@ -25,6 +26,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
     @Resource UADetailsService uaDetailsService;
     @Resource JwtManager jwtManager;
     @Resource UAManager uaManager;
+    @Resource AuthCodeManager authCodeManager;
     @Resource RSAKeyPairManager rsaKeyPairManager;
 
     @Override
@@ -38,6 +40,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(
                         "/auth/register",
                         "/auth/pub",
+                        "/auth/routerLogin",
                         "/auth/authCode"); // TODO: use one configure in cors()
     }
 
@@ -45,7 +48,11 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter =
                 new JwtLoginFilter(
-                        authenticationManager(), jwtManager, uaManager, rsaKeyPairManager);
+                        authenticationManager(),
+                        jwtManager,
+                        uaManager,
+                        authCodeManager,
+                        rsaKeyPairManager);
         JwtAuthenticationFilter jwtAuthenticationFilter =
                 new JwtAuthenticationFilter(authenticationManager(), jwtManager, uaManager);
 
@@ -56,7 +63,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
                 .csrf()
                 .disable() // TODO: enable this
                 .authorizeRequests()
-                .antMatchers("/auth/register**")
+                .antMatchers("/auth/routerLogin", "/auth/register**")
                 .permitAll()
 
                 // TODO: check role
