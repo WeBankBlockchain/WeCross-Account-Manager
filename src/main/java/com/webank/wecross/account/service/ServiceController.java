@@ -13,9 +13,12 @@ import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.ImageCodeCreator;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtManager;
+import com.webank.wecross.account.service.authentication.JwtToken;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse;
+import com.webank.wecross.account.service.authentication.packet.LoginRequest;
+import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
@@ -93,7 +96,7 @@ public class ServiceController {
             throw new RequestParametersException("password has not given");
         }
 
-        if (request.getImageToken() == null) {
+        if (request.getRandomToken() == null) {
             throw new RequestParametersException("image auth token has not given");
         }
 
@@ -170,6 +173,58 @@ public class ServiceController {
     }
 
     @RequestMapping(
+            value = "/auth/routerLogin",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object routerLogin(@RequestBody String params) {
+        RestResponse restResponse = RestResponse.newSuccess();
+        try {
+
+            RestRequest<LoginRequest> restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<LoginRequest>>() {});
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("routerLogin params: {}", restRequest.getData());
+            }
+
+            JwtManager jwtManager = serviceContext.getJwtManager();
+            UAManager uaManager = serviceContext.getUaManager();
+            String username = restRequest.getData().getUsername();
+
+            JwtToken jwtToken = jwtManager.newToken(username);
+            jwtManager.setTokenActive(jwtToken); // active it during login
+            String tokenStr = jwtToken.getTokenStrWithPrefix(); // with prefix
+
+            logger.info("routerLogin success: username:{} credential:{}", username, tokenStr);
+
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.SUCCESS)
+                            .message("success")
+                            .credential(tokenStr)
+                            .universalAccount(uaManager.getUA(username).toInfo())
+                            .build();
+
+            restResponse.setData(loginResponse);
+
+        } catch (Exception e) {
+            logger.error("e", e);
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.ERROR)
+                            .message(e.getMessage())
+                            .credential(null)
+                            .universalAccount(null)
+                            .build();
+
+            restResponse.setData(loginResponse);
+        }
+
+        return restResponse;
+    }
+
+    @RequestMapping(
             value = "/auth/register",
             method = RequestMethod.POST,
             produces = "application/json")
@@ -181,9 +236,9 @@ public class ServiceController {
             RestRequest<String> restRequest =
                     objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("base64 register params: {}", restRequest.getData());
-            }
+            //            if (logger.isDebugEnabled()) {
+            //                logger.debug("base64 register params: {}", restRequest.getData());
+            //            }
 
             RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
             byte[] bytesParams =
@@ -203,14 +258,14 @@ public class ServiceController {
             String username = registerRequest.getUsername();
             String password = registerRequest.getPassword();
             String imageCode = registerRequest.getAuthCode();
-            String imageToken = registerRequest.getImageToken();
+            String randomToken = registerRequest.getRandomToken();
 
             /** check if imageToken ok */
             AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
-            AuthCode imageAuthCode = authCodeManager.get(imageToken);
+            AuthCode imageAuthCode = authCodeManager.get(randomToken);
             if (imageAuthCode == null) {
                 logger.error(
-                        "image auth token not exist, code: {}, token:{}", imageCode, imageToken);
+                        "auth token not exist, code: {}, token:{}", imageCode, randomToken);
                 throw new AccountManagerException(
                         ErrorCode.ImageAuthTokenNotExist.getErrorCode(),
                         "image auth token not found");
@@ -218,7 +273,7 @@ public class ServiceController {
 
             if (imageAuthCode.isExpired()) {
                 logger.error("image auth token expired, token:{}", imageAuthCode);
-                authCodeManager.remove(imageToken);
+                authCodeManager.remove(randomToken);
                 throw new AccountManagerException(
                         ErrorCode.ImageAuthTokenExpired.getErrorCode(), "image auth token expired");
             }
@@ -230,7 +285,7 @@ public class ServiceController {
                         "image auth code does not match");
             }
 
-            authCodeManager.remove(imageToken);
+            authCodeManager.remove(randomToken);
 
             UAManager uaManager = serviceContext.getUaManager();
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
@@ -291,7 +346,7 @@ public class ServiceController {
     }
 
     @RequestMapping(value = "/auth/authCode", method = RequestMethod.GET)
-    private Object getAuthCode() {
+    private Object queryAuthCode() {
         RestResponse restResponse;
 
         try {
