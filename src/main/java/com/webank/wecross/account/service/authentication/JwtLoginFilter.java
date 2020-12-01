@@ -17,7 +17,6 @@ import com.webank.wecross.account.service.utils.PassWordUtility;
 import com.webank.wecross.account.service.utils.RSAUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Base64;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -78,14 +77,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         RestRequest<String> restRequest =
                 objectMapper.readValue(body, new TypeReference<RestRequest<String>>() {});
 
-        //        if (logger.isDebugEnabled()) {
-        //            logger.debug("base64 login params: {}", restRequest.getData());
-        //        }
-
         byte[] bytesParams =
-                RSAUtility.decrypt(
-                        Base64.getDecoder().decode(restRequest.getData().getBytes()),
-                        rsaKeyPairManager.getKeyPair().getPrivate());
+                RSAUtility.decryptBase64(
+                        restRequest.getData(), rsaKeyPairManager.getKeyPair().getPrivate());
 
         LoginRequest loginRequest =
                 objectMapper.readValue(bytesParams, new TypeReference<LoginRequest>() {});
@@ -119,15 +113,21 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
             String username = loginRequest.getUsername().trim();
             String password = loginRequest.getPassword().trim();
-            String imageToken = loginRequest.getRandomToken();
+            String randomToken = loginRequest.getRandomToken().trim();
             String authCode = loginRequest.getAuthCode();
+
+            // check randomToken first
+            if (authCode == null || authCode.trim().isEmpty()) {
+                authCodeManager.authToken(randomToken);
+            } else {
+                authCodeManager.authToken(randomToken, authCode.trim());
+            }
 
             UniversalAccount ua = uaManager.getUA(username);
 
-            logger.info("username: {}, salt: {}", loginRequest.getUsername(), ua.getSalt());
+            logger.info("login username: {}", username);
 
-            String mixedPassword =
-                    PassWordUtility.mixPassWithSalt(loginRequest.getPassword(), ua.getSalt());
+            String mixedPassword = PassWordUtility.mixPassWithSalt(password, ua.getSalt());
 
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, mixedPassword));

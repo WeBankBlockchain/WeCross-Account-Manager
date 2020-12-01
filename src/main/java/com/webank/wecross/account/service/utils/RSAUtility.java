@@ -1,10 +1,13 @@
 package com.webank.wecross.account.service.utils;
 
+import com.webank.wecross.account.service.exception.ConfigurationException;
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import javax.crypto.Cipher;
 import org.slf4j.Logger;
@@ -17,7 +20,11 @@ public class RSAUtility {
      * @param filename
      * @return
      */
-    public static KeyPair loadKeyPair(String filename) {
+    public static PrivateKey loadKeyPair(String filename)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
+                    ConfigurationException {
+        String content = FileUtility.readFileContent(filename);
+
         return null;
     }
 
@@ -36,6 +43,18 @@ public class RSAUtility {
                 "RSA Pub: {}",
                 Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
         return keyPair;
+    }
+
+    /**
+     * @param
+     * @param privateKey
+     * @return
+     * @throws Exception
+     */
+    public static byte[] decryptBase64(String encryptedData, PrivateKey privateKey)
+            throws Exception {
+        byte[] decodeBase64 = Base64.getDecoder().decode(encryptedData);
+        return decrypt(decodeBase64, privateKey);
     }
 
     /**
