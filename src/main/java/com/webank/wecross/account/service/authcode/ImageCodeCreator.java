@@ -15,9 +15,9 @@ public class ImageCodeCreator {
     private static final Logger logger = LoggerFactory.getLogger(ImageCodeCreator.class);
 
     /** Image authentication code validity period */
-    public static final int Picture_Auth_Code_Validity_Time = 90;
+    public static final int Image_Auth_Code_Validity_Time = 90;
     /** Image authentication code length */
-    public static final int Picture_Auth_Code_Char_Number = 4;
+    public static final int Image_Auth_Code_Char_Number = 4;
 
     /** */
     private static final char[] CHARS = {
@@ -56,9 +56,9 @@ public class ImageCodeCreator {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String token = Hex.toHexString(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
         imageAuthCode.setToken(token);
-        imageAuthCode.setValidTime(Picture_Auth_Code_Validity_Time);
+        imageAuthCode.setValidTime(Image_Auth_Code_Validity_Time);
         imageAuthCode.setCreateTime(LocalDateTime.now());
-        imageAuthCode.setCode(randomString(Picture_Auth_Code_Char_Number));
+        imageAuthCode.setCode(randomString(Image_Auth_Code_Char_Number));
         imageAuthCode.setImageBase64(TokenImgGenerator.getBase64Image(imageAuthCode.getCode()));
 
         logger.info("new AuthCode, {}", imageAuthCode);

@@ -97,7 +97,11 @@ public class ServiceController {
         }
 
         if (request.getRandomToken() == null) {
-            throw new RequestParametersException("image auth token has not given");
+            throw new RequestParametersException("random token has not given");
+        }
+
+        if (request.getAuthCode() == null) {
+            throw new RequestParametersException("image auth code has not given");
         }
 
         if (request.getUsername().length() > 256) {
@@ -109,7 +113,7 @@ public class ServiceController {
         }
 
         UAManager uaManager = serviceContext.getUaManager();
-        if (uaManager.isUAExist(request.getUsername())) {
+        if (uaManager.isUAExist(request.getUsername().trim())) {
             throw new AccountManagerException(
                     ErrorCode.UAAccountExist.getErrorCode(),
                     "user '" + request.getUsername() + "' has already been registered");
@@ -236,56 +240,28 @@ public class ServiceController {
             RestRequest<String> restRequest =
                     objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
 
-            //            if (logger.isDebugEnabled()) {
-            //                logger.debug("base64 register params: {}", restRequest.getData());
-            //            }
-
             RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
             byte[] bytesParams =
-                    RSAUtility.decrypt(
-                            Base64.getDecoder().decode(restRequest.getData().getBytes()),
-                            keyPair.getKeyPair().getPrivate());
+                    RSAUtility.decryptBase64(
+                            restRequest.getData(), keyPair.getKeyPair().getPrivate());
 
             RegisterRequest registerRequest =
                     objectMapper.readValue(bytesParams, new TypeReference<RegisterRequest>() {});
 
             if (logger.isDebugEnabled()) {
-                logger.debug("register params: {}", registerRequest);
+                logger.debug("register request params: {}", registerRequest);
             }
 
             checkRegisterRequest(registerRequest);
 
-            String username = registerRequest.getUsername();
-            String password = registerRequest.getPassword();
-            String imageCode = registerRequest.getAuthCode();
-            String randomToken = registerRequest.getRandomToken();
+            String username = registerRequest.getUsername().trim();
+            String password = registerRequest.getPassword().trim();
+            String authCode = registerRequest.getAuthCode().trim();
+            String randomToken = registerRequest.getRandomToken().trim();
 
             /** check if imageToken ok */
             AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
-            AuthCode imageAuthCode = authCodeManager.get(randomToken);
-            if (imageAuthCode == null) {
-                logger.error(
-                        "auth token not exist, code: {}, token:{}", imageCode, randomToken);
-                throw new AccountManagerException(
-                        ErrorCode.ImageAuthTokenNotExist.getErrorCode(),
-                        "image auth token not found");
-            }
-
-            if (imageAuthCode.isExpired()) {
-                logger.error("image auth token expired, token:{}", imageAuthCode);
-                authCodeManager.remove(randomToken);
-                throw new AccountManagerException(
-                        ErrorCode.ImageAuthTokenExpired.getErrorCode(), "image auth token expired");
-            }
-
-            if (!imageAuthCode.getCode().equalsIgnoreCase(imageCode)) {
-                logger.error("image auth code not match, request: {}", imageAuthCode);
-                throw new AccountManagerException(
-                        ErrorCode.ImageAuthTokenNotMatch.getErrorCode(),
-                        "image auth code does not match");
-            }
-
-            authCodeManager.remove(randomToken);
+            authCodeManager.authToken(randomToken, authCode);
 
             UAManager uaManager = serviceContext.getUaManager();
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
@@ -352,7 +328,7 @@ public class ServiceController {
         try {
             AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
             AuthCode imageAuthCode = ImageCodeCreator.createAuthCode();
-            authCodeManager.add(imageAuthCode);
+            authCodeManager.addAuthCode(imageAuthCode);
 
             AuthCodeResponse.AuthCodeInfo imageAuthCodeInfo = new AuthCodeResponse.AuthCodeInfo();
             imageAuthCodeInfo.setImageBase64(imageAuthCode.getImageBase64());
