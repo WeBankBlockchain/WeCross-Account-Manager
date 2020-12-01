@@ -100,6 +100,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new RequestParametersException("random token not found");
         }
 
+        logger.info("login request params: {}", loginRequest);
+
         return loginRequest;
     }
 
@@ -138,9 +140,14 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                 response.setCharacterEncoding("UTF-8");
                 response.setContentType("text/json;charset=utf-8");
 
+                int errorCode = LoginResponse.ERROR;
+                if (e instanceof AccountManagerException) {
+                    errorCode = ((AccountManagerException) e).getErrorCode();
+                }
+
                 LoginResponse loginResponse =
                         LoginResponse.builder()
-                                .errorCode(LoginResponse.ERROR)
+                                .errorCode(errorCode)
                                 .message("Login failed: " + e.getMessage())
                                 .build();
 

@@ -296,6 +296,11 @@ public class ServiceController {
         return restResponse;
     }
 
+    @RequestMapping(value = "/auth/pub", method = RequestMethod.POST)
+    private Object getPubPostWay(@RequestBody String params) {
+        return getPub();
+    }
+
     @RequestMapping(value = "/auth/pub", method = RequestMethod.GET)
     private Object getPub() {
         RestResponse restResponse = null;
@@ -319,6 +324,11 @@ public class ServiceController {
         }
 
         return restResponse;
+    }
+
+    @RequestMapping(value = "/auth/authCode", method = RequestMethod.POST)
+    private Object queryAuthCodePostWay() {
+        return queryAuthCode();
     }
 
     @RequestMapping(value = "/auth/authCode", method = RequestMethod.GET)
