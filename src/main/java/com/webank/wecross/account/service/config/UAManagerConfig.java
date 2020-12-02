@@ -9,14 +9,12 @@ import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ConfigurationException;
 import com.webank.wecross.account.service.utils.FileUtility;
 import com.webank.wecross.account.service.utils.RSAUtility;
-
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.annotation.Resource;
@@ -55,7 +53,8 @@ public class UAManagerConfig {
 
     @Bean
     public RSAKeyPairManager newRSAKeyPairManager()
-            throws NoSuchAlgorithmException, ConfigurationException, InvalidKeySpecException, IOException {
+            throws NoSuchAlgorithmException, ConfigurationException, InvalidKeySpecException,
+                    IOException {
         RSAKeyPairManager rsaKeyPairManager = new RSAKeyPairManager();
 
         String privateKeyContent =

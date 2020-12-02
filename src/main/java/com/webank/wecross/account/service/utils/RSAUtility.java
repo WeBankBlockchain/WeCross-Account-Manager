@@ -1,9 +1,7 @@
 package com.webank.wecross.account.service.utils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -11,12 +9,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import javax.crypto.Cipher;
-
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -121,10 +117,12 @@ public class RSAUtility {
         PemReader pemReader = new PemReader(new StringReader(content));
         PemObject pemObject = pemReader.readPemObject();
         byte[] pemContent = pemObject.getContent();
-        RSAPrivateKeyStructure asn1PrivKey = new RSAPrivateKeyStructure((ASN1Sequence) ASN1Sequence.fromByteArray(pemContent));
-        RSAPrivateKeySpec rsaPrivKeySpec = new RSAPrivateKeySpec(asn1PrivKey.getModulus(), asn1PrivKey.getPrivateExponent());
-        KeyFactory keyFactory= KeyFactory.getInstance("RSA");
-        PrivateKey privateKey= keyFactory.generatePrivate(rsaPrivKeySpec);
+        RSAPrivateKeyStructure asn1PrivKey =
+                new RSAPrivateKeyStructure((ASN1Sequence) ASN1Sequence.fromByteArray(pemContent));
+        RSAPrivateKeySpec rsaPrivKeySpec =
+                new RSAPrivateKeySpec(asn1PrivKey.getModulus(), asn1PrivKey.getPrivateExponent());
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(rsaPrivKeySpec);
         return privateKey;
     }
 }

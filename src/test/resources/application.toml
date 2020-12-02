@@ -18,8 +18,8 @@
 
 [encrypt]
     # for http request data encrypt
-    privateKeyFile = 'classpath:private.pem'
-    publicKeyFile = classpath:public.pem'
+    privateKeyFile = 'classpath:rsa_private.pem'
+    publicKeyFile = 'classpath:rsa_public.pem'
 
 [db]
     # for connect database
