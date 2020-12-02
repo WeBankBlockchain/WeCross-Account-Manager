@@ -1,5 +1,9 @@
 package com.webank.wecross.account.service.utils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -8,9 +12,15 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import javax.crypto.Cipher;
+
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,12 +101,13 @@ public class RSAUtility {
      * @throws InvalidKeySpecException
      */
     public static PublicKey createPublicKey(String content)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        X509EncodedKeySpec x509KeySpec =
-                new X509EncodedKeySpec(Base64.getDecoder().decode(content));
-        PublicKey pubKey = keyFactory.generatePublic(x509KeySpec);
-        return pubKey;
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PemReader pemReader = new PemReader(new StringReader(content));
+        PemObject pemObject = pemReader.readPemObject();
+        byte[] pemContent = pemObject.getContent();
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(pemContent);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
     }
 
     /**
@@ -106,11 +117,14 @@ public class RSAUtility {
      * @throws InvalidKeySpecException
      */
     public static PrivateKey createPrivateKey(String content)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
-        PKCS8EncodedKeySpec pkcs8KeySpec =
-                new PKCS8EncodedKeySpec(Base64.getDecoder().decode(content));
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey priKey = keyFactory.generatePrivate(pkcs8KeySpec);
-        return priKey;
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PemReader pemReader = new PemReader(new StringReader(content));
+        PemObject pemObject = pemReader.readPemObject();
+        byte[] pemContent = pemObject.getContent();
+        RSAPrivateKeyStructure asn1PrivKey = new RSAPrivateKeyStructure((ASN1Sequence) ASN1Sequence.fromByteArray(pemContent));
+        RSAPrivateKeySpec rsaPrivKeySpec = new RSAPrivateKeySpec(asn1PrivKey.getModulus(), asn1PrivKey.getPrivateExponent());
+        KeyFactory keyFactory= KeyFactory.getInstance("RSA");
+        PrivateKey privateKey= keyFactory.generatePrivate(rsaPrivKeySpec);
+        return privateKey;
     }
 }
