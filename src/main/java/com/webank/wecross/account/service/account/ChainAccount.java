@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
+import com.webank.wecross.account.service.utils.SM3;
 import lombok.Builder;
 import lombok.Data;
 
@@ -61,6 +62,7 @@ public class ChainAccount {
         tableBean.setUsername(username);
         tableBean.setKeyID(keyID);
         tableBean.setIdentity(identity);
+        tableBean.setIdentityDetail(getIdentityDetail());
         tableBean.setType(type);
         tableBean.setDefault(isDefault);
         tableBean.setPub(pubKey);
@@ -70,6 +72,11 @@ public class ChainAccount {
         tableBean.setExt2(ext2);
         tableBean.setExt3(ext3);
         return tableBean;
+    }
+
+    public String getIdentityDetail() {
+        String purePub = identity.trim().replace("-", "").replace("\n", "").replace("\r", "");
+        return SM3.hash(purePub);
     }
 
     public String getPubKey() {

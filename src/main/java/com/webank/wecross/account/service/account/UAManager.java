@@ -65,16 +65,23 @@ public class UAManager {
 
             chainAccountTableJPA.saveAll(chainAccountTableBeanList);
 
+        } catch (Exception e) {
+            logger.debug(
+                    "Set chain account failed, chain account is owned by other UA? "
+                            + e.getMessage());
+            throw new JPAException("Chain account is owned by other UA");
+        }
+
+        try {
             while (!ua.getChainAccounts2Remove().isEmpty()) {
                 ChainAccount ca2Remove = ua.getChainAccounts2Remove().peek();
                 chainAccountTableJPA.deleteById(ca2Remove.getId());
                 ua.getChainAccounts2Remove().remove(ca2Remove);
             }
-
         } catch (Exception e) {
-            throw new JPAException(
-                    "set chain account failed (chain account existing?): " + e.getMessage());
+            throw new JPAException("Remove chain account failed: " + e.getMessage());
         }
+
         chainAccountTableJPA.flush();
     }
 

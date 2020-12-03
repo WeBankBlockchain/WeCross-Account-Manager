@@ -20,8 +20,11 @@ public class ChainAccountTableBean {
     @Column(nullable = false)
     private Integer keyID;
 
-    @Column(nullable = false, unique = true, columnDefinition = "text")
-    private String identity;
+    @Column(nullable = false, columnDefinition = "text")
+    private String identity; // identity couldn't set to unique because of too long
+
+    @Column(nullable = false, unique = true)
+    private String identityDetail; // use this column for unique identity
 
     @Column(nullable = false)
     private String type;
