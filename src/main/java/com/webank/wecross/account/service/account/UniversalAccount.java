@@ -82,7 +82,6 @@ public class UniversalAccount {
         }
 
         type2ChainAccounts.putIfAbsent(chainAccount.getType(), new LinkedHashMap<>());
-
         Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
         if (chainAccount.isDefault) {
             for (ChainAccount ca : chainAccountMap.values()) {
@@ -181,7 +180,7 @@ public class UniversalAccount {
         type2ChainAccounts.putIfAbsent(chainAccount.getType(), new LinkedHashMap<>());
         Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
         for (ChainAccount ca : chainAccountMap.values()) {
-            if (ca.pubKey.equals(chainAccount.pubKey)) {
+            if (ca.getIdentityDetail().equals(chainAccount.getIdentityDetail())) {
                 return true;
             }
         }
