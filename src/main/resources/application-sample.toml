@@ -16,6 +16,11 @@
     expires = 18000 # 5 h
     noActiveExpires = 600 # 10 min
 
+[encrypt]
+    # for http request data encrypt
+    privateKeyFile = 'classpath:rsa_private.pem'
+    publicKeyFile = 'classpath:rsa_public.pem'
+
 [db]
     # for connect database
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'

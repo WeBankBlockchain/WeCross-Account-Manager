@@ -84,6 +84,8 @@ jar {
     exclude '**/*.yml'
     exclude '**/*.crt'
     exclude '**/*.key'
+    exclude '**/*.sql'
+    exclude '**/*.pem'
 
     doLast {
         copy {

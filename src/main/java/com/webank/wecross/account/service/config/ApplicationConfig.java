@@ -27,6 +27,11 @@ import org.slf4j.LoggerFactory;
     expires = 18000 # 5 h
     noActiveExpires = 600 # 10 min
 
+[encrypt]
+    # for http request data encrypt
+    privateKeyFile = 'classpath:private.pem'
+    publicKeyFile = classpath:public.pem'
+
 [db]
     # for connect database
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
@@ -39,6 +44,7 @@ public class ApplicationConfig {
 
     public Service service;
     public Admin admin;
+    public Encrypt encrypt;
     public Auth auth;
     public DB db;
 
@@ -53,11 +59,23 @@ public class ApplicationConfig {
         this.admin = new Admin(toml);
         this.auth = new Auth(toml);
         this.db = new DB(toml);
+        this.encrypt = new Encrypt(toml);
     }
 
     @Override
     public String toString() {
-        return "ApplicationConfig{" + "service=" + service + ", auth=" + auth + ", db=" + db + '}';
+        return "ApplicationConfig{"
+                + "service="
+                + service
+                + ", admin="
+                + admin
+                + ", encrypt="
+                + encrypt
+                + ", auth="
+                + auth
+                + ", db="
+                + db
+                + '}';
     }
 
     class Service {
@@ -99,6 +117,51 @@ public class ApplicationConfig {
                     + '\''
                     + ", sslOn="
                     + sslOn
+                    + '}';
+        }
+    }
+
+    class Encrypt {
+
+        public Encrypt(Toml toml) {
+            try {
+                this.privateKey = parseString(toml, "encrypt.privateKeyFile");
+                this.publicKey = parseString(toml, "encrypt.publicKeyFile");
+            } catch (ConfigurationException e) {
+                logger.debug("e: ", e);
+            }
+            logger.info(" rsa private: {}", this.privateKey);
+            logger.info(" rsa public: {}", this.publicKey);
+        }
+
+        private String privateKey;
+        private String publicKey;
+
+        public String getPrivateKey() {
+            return privateKey;
+        }
+
+        public void setPrivateKey(String privateKey) {
+            this.privateKey = privateKey;
+        }
+
+        public String getPublicKey() {
+            return publicKey;
+        }
+
+        public void setPublicKey(String publicKey) {
+            this.publicKey = publicKey;
+        }
+
+        @Override
+        public String toString() {
+            return "Encrypt{"
+                    + "privateKey='"
+                    + privateKey
+                    + '\''
+                    + ", publicKey='"
+                    + publicKey
+                    + '\''
                     + '}';
         }
     }
@@ -262,13 +325,14 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Toml toml, String key, String defaultReturn) {
         try {
             return parseString(toml, key);
         } catch (ConfigurationException e) {
             return defaultReturn;
         }
-    }
+    }*/
 
     private static String parseString(Toml toml, String key) throws ConfigurationException {
         String res = toml.getString(key);
@@ -280,6 +344,7 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Map<String, String> map, String key)
             throws ConfigurationException {
         String res = map.get(key);
@@ -290,6 +355,7 @@ public class ApplicationConfig {
         }
         return res;
     }
+    */
 
     private static String parseStringBase(Map<String, Object> map, String key)
             throws ConfigurationException {

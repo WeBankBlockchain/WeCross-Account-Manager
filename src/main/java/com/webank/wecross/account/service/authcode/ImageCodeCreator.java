@@ -1,4 +1,4 @@
-package com.webank.wecross.account.service.image.authcode;
+package com.webank.wecross.account.service.authcode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -11,13 +11,13 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImageAuthCodeCreator {
-    private static final Logger logger = LoggerFactory.getLogger(ImageAuthCodeCreator.class);
+public class ImageCodeCreator {
+    private static final Logger logger = LoggerFactory.getLogger(ImageCodeCreator.class);
 
     /** Image authentication code validity period */
-    public static final int Picture_Auth_Code_Validity_Time = 90;
+    public static final int Image_Auth_Code_Validity_Time = 90;
     /** Image authentication code length */
-    public static final int Picture_Auth_Code_Char_Number = 4;
+    public static final int Image_Auth_Code_Char_Number = 4;
 
     /** */
     private static final char[] CHARS = {
@@ -49,19 +49,19 @@ public class ImageAuthCodeCreator {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    public static ImageAuthCode createImageAuthCode() throws NoSuchAlgorithmException, IOException {
-        ImageAuthCode imageAuthCode = new ImageAuthCode();
+    public static AuthCode createAuthCode() throws NoSuchAlgorithmException, IOException {
+        AuthCode imageAuthCode = new AuthCode();
 
         String value = UUID.randomUUID().toString();
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String token = Hex.toHexString(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
         imageAuthCode.setToken(token);
-        imageAuthCode.setValidTime(Picture_Auth_Code_Validity_Time);
+        imageAuthCode.setValidTime(Image_Auth_Code_Validity_Time);
         imageAuthCode.setCreateTime(LocalDateTime.now());
-        imageAuthCode.setCode(randomString(Picture_Auth_Code_Char_Number));
+        imageAuthCode.setCode(randomString(Image_Auth_Code_Char_Number));
         imageAuthCode.setImageBase64(TokenImgGenerator.getBase64Image(imageAuthCode.getCode()));
 
-        logger.info("new ImageAuthCode, {}", imageAuthCode);
+        logger.info("new AuthCode, {}", imageAuthCode);
 
         return imageAuthCode;
     }

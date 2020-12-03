@@ -7,9 +7,8 @@ import com.webank.wecross.account.service.db.LoginTokenTableBean;
 import com.webank.wecross.account.service.db.LoginTokenTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.JPAException;
-import com.webank.wecross.account.service.exception.LogoutException;
-import com.webank.wecross.account.service.exception.UANotFoundException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -116,7 +115,8 @@ public class JwtManager {
 
     private void check(String tokenStr) throws AccountManagerException {
         if (hasLogout(tokenStr)) {
-            throw new LogoutException("user has logged out");
+            throw new AccountManagerException(
+                    ErrorCode.UserHasLogout.getErrorCode(), "user has logged out");
         }
     }
 
@@ -184,7 +184,9 @@ public class JwtManager {
     private String getUATokenSec(String accountName) throws AccountManagerException {
         String tokenSec = universalAccountTableJPA.findTokenSecByUsername(accountName);
         if (tokenSec == null || tokenSec.length() == 0) {
-            throw new UANotFoundException("account " + accountName + " not found");
+            throw new AccountManagerException(
+                    ErrorCode.UAAccountNotExist.getErrorCode(),
+                    "account " + accountName + " not found");
         }
 
         return tokenSec;

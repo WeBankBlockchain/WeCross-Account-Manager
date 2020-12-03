@@ -4,7 +4,7 @@ import com.webank.wecross.account.service.authentication.packet.AddChainAccountR
 import com.webank.wecross.account.service.config.Default;
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.exception.AddChainAccountException;
+import com.webank.wecross.account.service.exception.RequestParametersException;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ public class ChainAccountBuilder {
     }
 
     public static ChainAccount buildFromRequest(AddChainAccountRequest request, String username)
-            throws AddChainAccountException {
+            throws RequestParametersException {
         ChainAccount account = new ChainAccount();
         account.setUsername(username);
         account.setType(request.getType());
@@ -88,41 +88,41 @@ public class ChainAccountBuilder {
                 account.setIdentity(request.getPubKey());
                 break;
             default:
-                logger.error("request unkown ChainAccount type: " + type);
-                throw new AddChainAccountException("Unkown ChainAccount type: " + type);
+                logger.error("request unknown ChainAccount type: {}", type);
+                throw new RequestParametersException("Unknown ChainAccount type: " + type);
         }
 
         return account;
     }
 
-    private static void checkSecKey(String key) throws AddChainAccountException {
+    private static void checkSecKey(String key) throws RequestParametersException {
         if (!SEC_KEY_PATTERN.matcher(key).find()) {
-            throw new AddChainAccountException("Invalid secret key:" + key);
+            throw new RequestParametersException("Invalid secret key:" + key);
         }
     }
 
-    private static void checkPubKey(String key) throws AddChainAccountException {
+    private static void checkPubKey(String key) throws RequestParametersException {
         if (!PUB_KEY_PATTERN.matcher(key).find()) {
-            throw new AddChainAccountException("Invalid pub key:" + key);
+            throw new RequestParametersException("Invalid pub key:" + key);
         }
     }
 
-    private static void checkCertificatePem(String content) throws AddChainAccountException {
+    private static void checkCertificatePem(String content) throws RequestParametersException {
         if (!CERT_PATTERN.matcher(content).find()) {
-            throw new AddChainAccountException("Invalid certificate file:" + content);
+            throw new RequestParametersException("Invalid certificate file:" + content);
         }
     }
 
-    private static void checkAddressFormat(String address) throws AddChainAccountException {
+    private static void checkAddressFormat(String address) throws RequestParametersException {
         if (!address.contains("0x") || address.length() != 42) {
-            throw new AddChainAccountException(
+            throw new RequestParametersException(
                     "Invalid address format, address must start with \"0x\" and with 42 characters");
         }
     }
 
-    private static void checkMSPID(String mspID) throws AddChainAccountException {
+    private static void checkMSPID(String mspID) throws RequestParametersException {
         if (mspID == null || mspID.length() == 0) {
-            throw new AddChainAccountException("MSPID is empty!");
+            throw new RequestParametersException("MSPID is empty!");
         }
     }
 }

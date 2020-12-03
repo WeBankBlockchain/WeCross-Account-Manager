@@ -31,10 +31,12 @@ config()
     LOG_INFO "Configure application.toml"
     cd ${DIST}/conf
     cp -f application-sample.toml application.toml
+    cp ${ROOT}/src/test/resources/rsa* .
     # sslOn = false
     sed_i 's/true/false/g' application.toml
     sed_i "/password/s/''/'${DB_PASSWORD}'/g" application.toml
     cat application.toml
+    ls -al *
 
     LOG_INFO "Configure application.properties"
     # spring.jpa.properties.hibernate.hbm2ddl.auto=create
