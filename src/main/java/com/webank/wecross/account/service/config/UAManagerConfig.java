@@ -1,5 +1,6 @@
 package com.webank.wecross.account.service.config;
 
+import com.webank.wecross.account.service.account.LoginSalt;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
@@ -18,6 +19,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.annotation.Resource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,9 +38,10 @@ public class UAManagerConfig {
         UAManager uaManager = new UAManager();
         uaManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         uaManager.setChainAccountTableJPA(chainAccountTableJPA);
-        uaManager.initAdminUA(
-                applicationConfig.getAdmin().getUsername(),
-                applicationConfig.getAdmin().getPassword());
+        String username = applicationConfig.getAdmin().getUsername();
+        String password = applicationConfig.getAdmin().getPassword();
+        String confusedPassword = DigestUtils.sha256Hex(LoginSalt.LoginSalt + password);
+        uaManager.initAdminUA(username, confusedPassword);
 
         // uaManager.addMockUA();
 
