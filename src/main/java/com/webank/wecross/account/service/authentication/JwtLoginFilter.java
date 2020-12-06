@@ -100,6 +100,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new RequestParametersException("random token not found");
         }
 
+        //        if (loginRequest.getAuthCode() == null) {
+        //            throw new RequestParametersException("image auth code not found");
+        //        }
+
         logger.info("login request params: {}", loginRequest);
 
         return loginRequest;
@@ -118,12 +122,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             String randomToken = loginRequest.getRandomToken().trim();
             String authCode = loginRequest.getAuthCode();
 
-            // check randomToken first
-            if (authCode == null || authCode.trim().isEmpty()) {
-                authCodeManager.authToken(randomToken);
-            } else {
-                authCodeManager.authToken(randomToken, authCode.trim());
-            }
+            // check randomToken and imageAuthCode
+            authCodeManager.authToken(randomToken, authCode);
 
             UniversalAccount ua = uaManager.getUA(username);
 

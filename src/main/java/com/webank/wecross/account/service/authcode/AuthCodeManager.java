@@ -14,6 +14,7 @@ public class AuthCodeManager {
     private static final Logger logger = LoggerFactory.getLogger(AuthCodeManager.class);
 
     private final Map<String, AuthCode> authCodeMap = new ConcurrentHashMap<>();
+    private boolean allowImageAuthCodeEmpty = true;
     private ScheduledExecutorService scheduledExecutorService = null;
 
     public AuthCodeManager(ScheduledExecutorService scheduledExecutorService) {
@@ -61,6 +62,12 @@ public class AuthCodeManager {
     }
 
     public void authToken(String randomToken, String imageCode) throws AccountManagerException {
+
+        if (allowImageAuthCodeEmpty) {
+            authToken(randomToken);
+            return;
+        }
+
         AuthCode authCode = getAuthCode(randomToken);
         if (authCode == null) {
             logger.error("token not exist, token:{}", randomToken);
@@ -106,5 +113,13 @@ public class AuthCodeManager {
         if (logger.isDebugEnabled()) {
             logger.debug("remove authCode: {}", token);
         }
+    }
+
+    public boolean isAllowImageAuthCodeEmpty() {
+        return allowImageAuthCodeEmpty;
+    }
+
+    public void setAllowImageAuthCodeEmpty(boolean allowImageAuthCodeEmpty) {
+        this.allowImageAuthCodeEmpty = allowImageAuthCodeEmpty;
     }
 }

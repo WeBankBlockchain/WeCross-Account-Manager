@@ -36,7 +36,9 @@ public class UAManagerConfig {
         UAManager uaManager = new UAManager();
         uaManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         uaManager.setChainAccountTableJPA(chainAccountTableJPA);
-        uaManager.initAdminUA(applicationConfig.admin.username, applicationConfig.admin.password);
+        uaManager.initAdminUA(
+                applicationConfig.getAdmin().getUsername(),
+                applicationConfig.getAdmin().getPassword());
 
         // uaManager.addMockUA();
 
@@ -47,7 +49,10 @@ public class UAManagerConfig {
     public AuthCodeManager newAuthCodeManager() {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("AuthCode-"));
+
+        ApplicationConfig.Ext ext = applicationConfig.getExt();
         AuthCodeManager authCodeManager = new AuthCodeManager(scheduledExecutorService);
+        authCodeManager.setAllowImageAuthCodeEmpty(ext.isAllowImageAuthCodeEmpty());
         return authCodeManager;
     }
 
@@ -58,9 +63,9 @@ public class UAManagerConfig {
         RSAKeyPairManager rsaKeyPairManager = new RSAKeyPairManager();
 
         String privateKeyContent =
-                FileUtility.readFileContent(applicationConfig.encrypt.getPrivateKey());
+                FileUtility.readFileContent(applicationConfig.getEncrypt().getPrivateKey());
         String publicKeyContent =
-                FileUtility.readFileContent(applicationConfig.encrypt.getPublicKey());
+                FileUtility.readFileContent(applicationConfig.getEncrypt().getPublicKey());
         PrivateKey privateKey = RSAUtility.createPrivateKey(privateKeyContent);
         PublicKey publicKey = RSAUtility.createPublicKey(publicKeyContent);
         rsaKeyPairManager.setKeyPair(new KeyPair(publicKey, privateKey));
