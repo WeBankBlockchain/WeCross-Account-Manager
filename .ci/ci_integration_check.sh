@@ -28,10 +28,15 @@ sed_i()
 
 config()
 {
+    LOG_INFO "Create RSA keypair"
+    # generate rsa_keypair
+    cd ${DIST}
+    bash create_rsa_keypair.sh -d conf/
+
     LOG_INFO "Configure application.toml"
     cd ${DIST}/conf
     cp -f application-sample.toml application.toml
-    cp ${ROOT}/src/test/resources/rsa* .
+
     # sslOn = false
     sed_i 's/true/false/g' application.toml
     sed_i "/password/s/''/'${DB_PASSWORD}'/g" application.toml
@@ -39,6 +44,7 @@ config()
     ls -al *
 
     LOG_INFO "Configure application.properties"
+    
     # spring.jpa.properties.hibernate.hbm2ddl.auto=create
     # sed_i 's/update/create/g' application.properties
     cat application.properties
