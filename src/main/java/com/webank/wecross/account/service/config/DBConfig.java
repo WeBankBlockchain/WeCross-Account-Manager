@@ -13,7 +13,10 @@ public class DBConfig {
     @Bean
     public DataSource newDataSource() {
         DataSource dataSource =
-                new DriverManagerDataSource(config.db.url, config.db.username, config.db.password);
+                new DriverManagerDataSource(
+                        config.getDb().getUrl(),
+                        config.getDb().getUsername(),
+                        config.getDb().getPassword());
         return dataSource;
     }
 }

@@ -26,3 +26,8 @@
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
     username = 'root'
     password = ''
+
+[ext]
+    # for image auth code
+    allowImageAuthCodeEmpty = true
+

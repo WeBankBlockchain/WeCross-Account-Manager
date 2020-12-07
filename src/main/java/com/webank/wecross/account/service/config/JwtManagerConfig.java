@@ -16,9 +16,9 @@ public class JwtManagerConfig {
     @Bean
     public JwtManager newJwtManager() {
         JwtManager jwtManager = new JwtManager();
-        jwtManager.setIssuer(applicationConfig.auth.name);
-        jwtManager.setExpires(applicationConfig.auth.expires);
-        jwtManager.setNoActiveExpires(applicationConfig.auth.noActiveExpires);
+        jwtManager.setIssuer(applicationConfig.getAuth().getName());
+        jwtManager.setExpires(applicationConfig.getAuth().getExpires());
+        jwtManager.setNoActiveExpires(applicationConfig.getAuth().getNoActiveExpires());
 
         jwtManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         jwtManager.setLoginTokenTableJPA(loginTokenTableJPA);
