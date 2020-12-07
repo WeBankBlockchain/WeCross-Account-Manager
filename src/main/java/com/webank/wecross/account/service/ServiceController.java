@@ -100,9 +100,11 @@ public class ServiceController {
             throw new RequestParametersException("random token has not given");
         }
 
+        /*
         if (request.getAuthCode() == null) {
             throw new RequestParametersException("image auth code has not given");
         }
+        */
 
         if (request.getUsername().length() > 256) {
             throw new RequestParametersException("username is too long, limit 256");
@@ -256,8 +258,8 @@ public class ServiceController {
 
             String username = registerRequest.getUsername().trim();
             String password = registerRequest.getPassword().trim();
-            String authCode = registerRequest.getAuthCode().trim();
             String randomToken = registerRequest.getRandomToken().trim();
+            String authCode = registerRequest.getAuthCode();
 
             /** check if imageToken ok */
             AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
