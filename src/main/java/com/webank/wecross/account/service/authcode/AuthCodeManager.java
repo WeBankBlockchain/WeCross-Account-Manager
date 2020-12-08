@@ -43,7 +43,7 @@ public class AuthCodeManager {
         }
     }
 
-    public void authToken(String randomToken) throws AccountManagerException {
+    private void authToken(String randomToken) throws AccountManagerException {
         AuthCode authCode = getAuthCode(randomToken);
         if (authCode == null) {
             logger.error("token not exist, token:{}", randomToken);
@@ -63,7 +63,8 @@ public class AuthCodeManager {
 
     public void authToken(String randomToken, String imageCode) throws AccountManagerException {
 
-        if (allowImageAuthCodeEmpty) {
+        /** Configure authentication codes not to be checked */
+        if (allowImageAuthCodeEmpty && (imageCode == null || "".equals(imageCode))) {
             authToken(randomToken);
             return;
         }
