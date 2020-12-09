@@ -113,13 +113,6 @@ public class ServiceController {
         if (request.getPassword().length() > 256) {
             throw new RequestParametersException("password is too long, limit 256");
         }
-
-        UAManager uaManager = serviceContext.getUaManager();
-        if (uaManager.isUAExist(request.getUsername().trim())) {
-            throw new AccountManagerException(
-                    ErrorCode.UAAccountExist.getErrorCode(),
-                    "user '" + request.getUsername() + "' has already been registered");
-        }
     }
 
     @RequestMapping(
@@ -266,6 +259,12 @@ public class ServiceController {
             authCodeManager.authToken(randomToken, authCode);
 
             UAManager uaManager = serviceContext.getUaManager();
+            if (uaManager.isUAExist(username)) {
+                throw new AccountManagerException(
+                        ErrorCode.UAAccountExist.getErrorCode(),
+                        "user '" + username + "' has already been registered");
+            }
+
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
 
             uaManager.setUA(newUA);

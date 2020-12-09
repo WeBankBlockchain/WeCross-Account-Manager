@@ -12,6 +12,7 @@ import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
 import com.webank.wecross.account.service.utils.RSAUtility;
@@ -140,7 +141,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                 response.setCharacterEncoding("UTF-8");
                 response.setContentType("text/json;charset=utf-8");
 
-                int errorCode = LoginResponse.ERROR;
+                int errorCode = ErrorCode.AccountOrPasswordIncorrect.getErrorCode();
                 if (e instanceof AccountManagerException) {
                     errorCode = ((AccountManagerException) e).getErrorCode();
                 }
@@ -160,7 +161,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
                 response.getWriter().write(objectMapper.writeValueAsString(restResponse));
             } catch (Exception e1) {
-                logger.error(e1.getMessage());
+                logger.error("e1: ", e1);
             }
             return null;
         }
@@ -200,7 +201,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         } catch (AccountManagerException e) {
             LoginResponse loginResponse =
                     LoginResponse.builder()
-                            .errorCode(LoginResponse.ERROR)
+                            .errorCode(e.getErrorCode())
                             .message(e.getMessage())
                             .credential(null)
                             .universalAccount(null)
@@ -219,18 +220,16 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             throws IOException, ServletException {
         logger.info("Login failed: {}", failed);
 
-        String ret;
-
         LoginResponse loginResponse =
                 LoginResponse.builder()
-                        .errorCode(LoginResponse.ERROR)
+                        .errorCode(ErrorCode.AccountOrPasswordIncorrect.getErrorCode())
                         .message(failed.getMessage())
                         .build();
 
         RestResponse restResponse =
                 RestResponse.builder().errorCode(0).message("success").data(loginResponse).build();
 
-        ret = objectMapper.writeValueAsString(restResponse);
+        String ret = objectMapper.writeValueAsString(restResponse);
 
         response.setContentType("text/json;charset=utf-8");
         response.getWriter().write(ret);
