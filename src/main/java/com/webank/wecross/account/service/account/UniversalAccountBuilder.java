@@ -100,7 +100,7 @@ public class UniversalAccountBuilder {
         } catch (Exception e) {
             logger.error("New UA failed: " + e);
             throw new AccountManagerException(
-                    ErrorCode.NewUAException.getErrorCode(), e.getMessage());
+                    ErrorCode.CreateUAFailed.getErrorCode(), e.getMessage());
         }
     }
 
