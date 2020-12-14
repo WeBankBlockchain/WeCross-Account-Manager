@@ -1,0 +1,1 @@
+create database if not exists wecross_account_manager collate=utf8_bin;

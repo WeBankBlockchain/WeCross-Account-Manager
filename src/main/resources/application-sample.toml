@@ -1,0 +1,32 @@
+[service]
+    address = '0.0.0.0'
+    port = 8340
+    sslKey = 'classpath:ssl.key'
+    sslCert = 'classpath:ssl.crt'
+    caCert = 'classpath:ca.crt'
+    sslOn = true
+
+[admin]
+    username = 'org1-admin'
+    password = '123456'
+
+[auth]
+    # for issuing token
+    name = 'org1'
+    expires = 18000 # 5 h
+    noActiveExpires = 600 # 10 min
+
+[encrypt]
+    # for http request data encrypt
+    privateKeyFile = 'classpath:rsa_private.pem'
+    publicKeyFile = 'classpath:rsa_public.pem'
+
+[db]
+    # for connect database
+    url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
+    username = 'root'
+    password = ''
+
+[ext]
+    # for image auth code, allow image auth token empty
+    allowImageAuthCodeEmpty = true

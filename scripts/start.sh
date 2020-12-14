@@ -1,0 +1,155 @@
+#!/bin/bash
+
+APP_NAME=com.webank.wecross.account.service.Application
+
+APPS_FOLDER=$(pwd)/apps
+CLASS_PATH=$(pwd)'/apps/*:lib/*:conf:plugin/*'
+WINDS_CLASS_PATH=$(pwd)'/apps/*;lib/*;conf;plugin/*'
+
+STATUS_STARTING="Starting"
+STATUS_RUNNING="Running"
+STATUS_STOPPED="Stopped"
+
+LOG_INFO()
+{
+    local content=${1}
+    echo -e "\033[32m${content}\033[0m"
+}
+
+LOG_ERROR()
+{
+    local content=${1}
+    echo -e "\033[31m${content}\033[0m"
+}
+
+wecross_pid()
+{
+    ps -ef | grep ${APP_NAME} | grep ${APPS_FOLDER} | grep -v grep | awk '{print $2}'
+}
+
+run_wecross() 
+{
+    if [ "$(uname)" == "Darwin" ]; then
+        # Mac
+        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+    elif [ "$(uname -s | grep MINGW | wc -l)" != "0" ]; then
+        # Windows
+        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+    else
+        # GNU/Linux
+        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+    fi
+}
+
+wecross_status()
+{
+    if [ ! -z $(wecross_pid) ]; then
+        if [ ! -z "$(grep "WeCross-Account-Manager start success" start.out)" ]; then
+            echo ${STATUS_RUNNING}
+        else
+            echo ${STATUS_STARTING}
+        fi
+    else
+        echo ${STATUS_STOPPED}
+    fi
+}
+
+tail_log()
+{
+    # LOG_INFO "Debug log"
+    # cat logs/debug.log
+    LOG_INFO "Error log"
+    tail -n 1000 logs/error.log
+    LOG_INFO "Start log"
+    tail -n 50 start.out
+}
+
+before_start()
+{
+    local status=$(wecross_status)
+
+    case ${status} in
+        ${STATUS_STARTING})
+            LOG_ERROR "WeCross-Account-Manager is starting, pid is $(wecross_pid)"
+            exit 0
+            ;;
+        ${STATUS_RUNNING})
+            LOG_ERROR "WeCross-Account-Manager is running, pid is $(wecross_pid)"
+            exit 0
+            ;;
+        ${STATUS_STOPPED})
+            # do nothing
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+}
+
+start()
+{
+    rm -f start.out
+    run_wecross
+    echo -e "\033[32mWeCross-Account-Manager booting up ..\033[0m\c"
+    try_times=45
+    i=0
+    while [ $i -lt ${try_times} ]
+    do
+        sleep 1
+        local status=$(wecross_status)
+
+        case ${status} in
+            ${STATUS_STARTING})
+                echo -e "\033[32m.\033[0m\c"
+                ;;
+            ${STATUS_RUNNING})
+                break
+                ;;
+            ${STATUS_STOPPED})
+                break
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+
+        ((i=i+1))
+    done
+    echo ""
+}
+
+after_start()
+{
+    local status=$(wecross_status)
+
+    case ${status} in
+        ${STATUS_STARTING})
+            kill $(wecross_pid)
+            LOG_ERROR "Exceed waiting time. Killed. Please try to start WeCross-Account-Manager again"
+            tail_log
+            exit 1
+            ;;
+        ${STATUS_RUNNING})
+            LOG_INFO "WeCross-Account-Manager start successfully!"
+            ;;
+        ${STATUS_STOPPED})
+            LOG_ERROR "WeCross-Account-Manager start failed"
+            LOG_ERROR "See logs/error.log for details"
+            tail_log
+            exit 1
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+}
+
+main()
+{
+    before_start
+    start
+    after_start
+}
+
+main
+
