@@ -2,10 +2,10 @@
 
 # WeCross-Account-Manager
 
-[![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-Account-Manager/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-Account-Manager) [![Build Status](https://travis-ci.org/WeBankFinTech/WeCross-Account-Manager.svg?branch=dev)](https://travis-ci.org/WeBankFinTech/WeCross-Account-Manager) [![Latest release](https://img.shields.io/github/release/WeBankFinTech/WeCross-Account-Manager.svg)](https://github.com/WeBankFinTech/WeCross-Account-Manager/releases/latest) 
-[![License](https://img.shields.io/github/license/WeBankFinTech/WeCross-Account-Manager)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
+[![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-Account-Manager/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-Account-Manager) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-Account-Manager.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-Account-Manager) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-Account-Manager.svg)](https://github.com/WeBankBlockchain/WeCross-Account-Manager/releases/latest) 
+[![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-Account-Manager)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
 
-WeCross Account Manager是[WeCross](https://github.com/WeBankFinTech/WeCross)跨链账户管理服务。
+WeCross Account Manager是[WeCross](https://github.com/WeBankBlockchain/WeCross)跨链账户管理服务。
 
 ## 关键特性
 
@@ -36,8 +36,8 @@ $ ./gradlew assemble
 
 欢迎参与WeCross社区的维护和建设：
 
-- 提交代码(Pull requests)，可参考[代码贡献流程](CONTRIBUTING.md)以及[wiki指南](https://github.com/WeBankFinTech/WeCross/wiki/%E8%B4%A1%E7%8C%AE%E4%BB%A3%E7%A0%81)
-- [提问和提交BUG](https://github.com/WeBankFinTech/WeCross-Account-Manager/issues/new)
+- 提交代码(Pull requests)，可参考[代码贡献流程](CONTRIBUTING.md)以及[wiki指南](https://github.com/WeBankBlockchain/WeCross/wiki/%E8%B4%A1%E7%8C%AE%E4%BB%A3%E7%A0%81)
+- [提问和提交BUG](https://github.com/WeBankBlockchain/WeCross-Account-Manager/issues/new)
 
 希望在您的参与下，WeCross会越来越好！
 
@@ -46,6 +46,4 @@ $ ./gradlew assemble
 
 ## License
 
-![license](http://img.shields.io/badge/license-Apache%20v2-blue.svg)
-
-WeCross Account Manager的开源协议为[Apache License 2.0](http://www.apache.org/licenses/)，详情参考[LICENSE](./LICENSE)。
+WeCross Account Manager的开源协议为Apache License 2.0，详情参考[LICENSE](./LICENSE)。
