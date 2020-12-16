@@ -16,7 +16,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Gradle
-      run: ./gradlew assemble
+      run: bash gradlew assemble
     - name: Pack
       run: chmod +x dist/*.sh && mv dist WeCross-Account-Manager && tar -zcvf WeCross-Account-Manager.tar.gz WeCross-Account-Manager
     - name: Checksum
