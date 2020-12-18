@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import lombok.Data;
 
 @Data
@@ -27,6 +28,10 @@ public class UniversalAccountTableBean {
     @Column(nullable = false)
     private String password;
 
+    // secret salt
+    @Column(nullable = false)
+    private String salt;
+
     // secret
     @Column(nullable = false)
     private String tokenSec;
@@ -38,4 +43,10 @@ public class UniversalAccountTableBean {
 
     @Column(columnDefinition = "text")
     private String ext;
+
+    @Column private Integer latestKeyID;
+
+    @Version private Long version;
+
+    @Column private Long updateTimestamp;
 }

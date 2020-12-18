@@ -13,7 +13,7 @@ import lombok.Data;
 public class LoginTokenTableBean {
     @Id @GeneratedValue private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "text")
     private String token; // token without prefix 'Bearer'
 
     @Column(nullable = false)

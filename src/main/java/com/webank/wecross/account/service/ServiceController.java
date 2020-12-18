@@ -8,19 +8,37 @@ import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
+import com.webank.wecross.account.service.authcode.AuthCode;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
+import com.webank.wecross.account.service.authcode.ImageCodeCreator;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtManager;
+import com.webank.wecross.account.service.authentication.JwtToken;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
+import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse;
+import com.webank.wecross.account.service.authentication.packet.LoginRequest;
+import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
+import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
+import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
+import com.webank.wecross.account.service.authentication.packet.PubResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
 import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
+import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountRequest;
+import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
-import com.webank.wecross.account.service.exception.AddChainAccountException;
-import com.webank.wecross.account.service.exception.RegisterException;
-import com.webank.wecross.account.service.exception.SetChainAccountException;
+import com.webank.wecross.account.service.exception.ErrorCode;
+import com.webank.wecross.account.service.exception.RequestParametersException;
+import com.webank.wecross.account.service.utils.PassWordUtility;
+import com.webank.wecross.account.service.utils.RSAUtility;
+import java.util.Base64;
+import java.util.UUID;
 import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ServiceController {
+    private static Logger logger = LoggerFactory.getLogger(ServiceController.class);
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public ServiceController() {
@@ -48,28 +68,159 @@ public class ServiceController {
     }
     */
 
-    private void checkRegisterRequest(RegisterRequest request) throws AccountManagerException {
+    private void checkModifyPasswordRequest(ModifyPasswordRequest request)
+            throws AccountManagerException {
         if (request.getUsername() == null) {
-            throw new RegisterException("username has not given");
-        }
-
-        if (request.getPassword() == null) {
-            throw new RegisterException("password has not given");
+            throw new RequestParametersException("username has not given");
         }
 
         if (request.getUsername().length() > 256) {
-            throw new RegisterException("username is too long, limit 256");
+            throw new RequestParametersException("username is too long, limit 256");
+        }
+
+        if (request.getOldPassword().length() > 256) {
+            throw new RequestParametersException("old password is too long, limit 256");
+        }
+
+        if (request.getNewPassword().length() > 256) {
+            throw new RequestParametersException("new password is too long, limit 256");
+        }
+    }
+
+    private void checkRegisterRequest(RegisterRequest request) throws AccountManagerException {
+        if (request.getUsername() == null) {
+            throw new RequestParametersException("username has not given");
+        }
+
+        if (request.getPassword() == null) {
+            throw new RequestParametersException("password has not given");
+        }
+
+        if (request.getRandomToken() == null) {
+            throw new RequestParametersException("random token has not given");
+        }
+
+        /*
+        if (request.getAuthCode() == null) {
+            throw new RequestParametersException("image auth code has not given");
+        }
+        */
+
+        if (request.getUsername().length() > 256) {
+            throw new RequestParametersException("username is too long, limit 256");
         }
 
         if (request.getPassword().length() > 256) {
-            throw new RegisterException("password is too long, limit 256");
+            throw new RequestParametersException("password is too long, limit 256");
+        }
+    }
+
+    @RequestMapping(
+            value = "/auth/modifyPassword",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object modifyPassword(@RequestBody String params) {
+        RestResponse restResponse = RestResponse.newSuccess();
+        try {
+
+            RestRequest<ModifyPasswordRequest> restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<ModifyPasswordRequest>>() {});
+
+            ModifyPasswordRequest modifyPasswordRequest = restRequest.getData();
+
+            logger.info("ModifyPasswordRequest: {}", modifyPasswordRequest);
+            checkModifyPasswordRequest(modifyPasswordRequest);
+
+            UniversalAccount ua =
+                    serviceContext.getUaManager().getUA(modifyPasswordRequest.getUsername());
+            String passwordWithSalt =
+                    PassWordUtility.mixPassWithSalt(ua.getPassword(), ua.getSalt());
+            if (!passwordWithSalt.equals(ua.getPassword())) {
+                throw new RuntimeException("password incorrect.");
+            }
+
+            ua.setPassword(
+                    PassWordUtility.mixPassWithSalt(
+                            modifyPasswordRequest.getNewPassword(), UUID.randomUUID().toString()));
+
+            // update password
+            serviceContext.getUaManager().setUA(ua);
+
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder().errorCode(0).message("success").build();
+            restResponse.setData(modifyPasswordResponse);
+
+        } catch (AccountManagerException e) {
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder()
+                            .errorCode(e.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse.setData(modifyPasswordResponse);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            ModifyPasswordResponse modifyPasswordResponse =
+                    ModifyPasswordResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse.setData(modifyPasswordResponse);
         }
 
-        UAManager uaManager = serviceContext.getUaManager();
-        if (uaManager.isUAExist(request.getUsername())) {
-            throw new RegisterException(
-                    "user '" + request.getUsername() + "' has already been registered");
+        return restResponse;
+    }
+
+    @RequestMapping(
+            value = "/auth/routerLogin",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object routerLogin(@RequestBody String params) {
+        RestResponse restResponse = RestResponse.newSuccess();
+        try {
+
+            RestRequest<LoginRequest> restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<LoginRequest>>() {});
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("routerLogin params: {}", restRequest.getData());
+            }
+
+            JwtManager jwtManager = serviceContext.getJwtManager();
+            UAManager uaManager = serviceContext.getUaManager();
+            String username = restRequest.getData().getUsername();
+
+            JwtToken jwtToken = jwtManager.newToken(username);
+            jwtManager.setTokenActive(jwtToken); // active it during login
+            String tokenStr = jwtToken.getTokenStrWithPrefix(); // with prefix
+
+            logger.info("routerLogin success: username:{} credential:{}", username, tokenStr);
+
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.SUCCESS)
+                            .message("success")
+                            .credential(tokenStr)
+                            .universalAccount(uaManager.getUA(username).toInfo())
+                            .build();
+
+            restResponse.setData(loginResponse);
+
+        } catch (Exception e) {
+            logger.error("e", e);
+            LoginResponse loginResponse =
+                    LoginResponse.builder()
+                            .errorCode(LoginResponse.ERROR)
+                            .message(e.getMessage())
+                            .credential(null)
+                            .universalAccount(null)
+                            .build();
+
+            restResponse.setData(loginResponse);
         }
+
+        return restResponse;
     }
 
     @RequestMapping(
@@ -77,27 +228,43 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object register(@RequestBody String params) {
-        RestRequest<RegisterRequest> restRequest;
-        RestResponse restResponse;
-        try {
-            restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<RegisterRequest>>() {});
-        } catch (Exception e) {
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
 
+        RestResponse restResponse = RestResponse.newSuccess();
         try {
+            /** The requested data is encrypted by RSA, first decrypt the data */
+            RestRequest<String> restRequest =
+                    objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
 
-            RegisterRequest registerRequest = restRequest.getData();
+            RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
+            byte[] bytesParams =
+                    RSAUtility.decryptBase64(
+                            restRequest.getData(), keyPair.getKeyPair().getPrivate());
+
+            RegisterRequest registerRequest =
+                    objectMapper.readValue(bytesParams, new TypeReference<RegisterRequest>() {});
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("register request params: {}", registerRequest);
+            }
 
             checkRegisterRequest(registerRequest);
 
-            String username = registerRequest.getUsername();
-            String password = registerRequest.getPassword();
+            String username = registerRequest.getUsername().trim();
+            String password = registerRequest.getPassword().trim();
+            String randomToken = registerRequest.getRandomToken().trim();
+            String authCode = registerRequest.getAuthCode();
+
+            /** check if imageToken ok */
+            AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
+            authCodeManager.authToken(randomToken, authCode);
 
             UAManager uaManager = serviceContext.getUaManager();
+            if (uaManager.isUAExist(username)) {
+                throw new AccountManagerException(
+                        ErrorCode.UAAccountExist.getErrorCode(),
+                        "user '" + username + "' has already been registered");
+            }
+
             UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
 
             uaManager.setUA(newUA);
@@ -108,23 +275,106 @@ public class ServiceController {
                             .universalAccount(newUA.toInfo())
                             .message("success")
                             .build();
-            restResponse = RestResponse.newSuccess();
+
             restResponse.setData(registerResponse);
 
-        } catch (Exception e) {
+        } catch (AccountManagerException e) {
             RegisterResponse registerResponse =
-                    RegisterResponse.builder().errorCode(1).message(e.getMessage()).build();
-            restResponse = RestResponse.newSuccess();
+                    RegisterResponse.builder()
+                            .errorCode(e.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse.setData(registerResponse);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            RegisterResponse registerResponse =
+                    RegisterResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
             restResponse.setData(registerResponse);
         }
         return restResponse;
     }
 
-    @RequestMapping(value = "/auth/hasLogin", produces = "application/json")
-    private Object hasLogin(@RequestBody String params) {
+    @RequestMapping(value = "/auth/pub", method = RequestMethod.POST)
+    private Object getPubPostWay(@RequestBody String params) {
+        return getPub();
+    }
+
+    @RequestMapping(value = "/auth/pub", method = RequestMethod.GET)
+    private Object getPub() {
+        RestResponse restResponse = null;
+        try {
+            RSAKeyPairManager rsaKeyPairManager = serviceContext.getRsaKeyPairManager();
+            String pub =
+                    Base64.getEncoder()
+                            .encodeToString(
+                                    rsaKeyPairManager.getKeyPair().getPublic().getEncoded());
+
+            PubResponse pubResponse =
+                    PubResponse.builder().errorCode(0).pub(pub).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(pubResponse);
+            if (logger.isDebugEnabled()) {
+                logger.debug("pub: {}", pubResponse.toString());
+            }
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            restResponse = RestResponse.newFailed(e.getMessage());
+        }
+
+        return restResponse;
+    }
+
+    @RequestMapping(value = "/auth/authCode", method = RequestMethod.POST)
+    private Object queryAuthCodePostWay() {
+        return queryAuthCode();
+    }
+
+    @RequestMapping(value = "/auth/authCode", method = RequestMethod.GET)
+    private Object queryAuthCode() {
+        RestResponse restResponse;
+
+        try {
+            AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
+            AuthCode imageAuthCode = ImageCodeCreator.createAuthCode();
+            authCodeManager.addAuthCode(imageAuthCode);
+
+            AuthCodeResponse.AuthCodeInfo imageAuthCodeInfo = new AuthCodeResponse.AuthCodeInfo();
+            imageAuthCodeInfo.setImageBase64(imageAuthCode.getImageBase64());
+            imageAuthCodeInfo.setRandomToken(imageAuthCode.getToken());
+
+            AuthCodeResponse imageAuthCodeResponse =
+                    AuthCodeResponse.builder()
+                            .errorCode(0)
+                            .authCode(imageAuthCodeInfo)
+                            .message("success")
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(imageAuthCodeResponse);
+
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            AuthCodeResponse imageAuthCodeResponse =
+                    AuthCodeResponse.builder()
+                            .errorCode(ErrorCode.UndefinedError.getErrorCode())
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(imageAuthCodeResponse);
+        }
+        return restResponse;
+    }
+
+    @RequestMapping(value = "/auth/getUAVersion", produces = "application/json")
+    private Object getUAVersion(@RequestBody String params) {
         // if goes here, the user has login and token has not expired
+
+        Long uaVersion = serviceContext.getUaManager().getCurrentLoginUA().getVersion();
+
         RestResponse restResponse = RestResponse.newSuccess();
-        restResponse.setData(null);
+        restResponse.setData(uaVersion);
         return restResponse;
     }
 
@@ -154,7 +404,7 @@ public class ServiceController {
         } catch (AccountManagerException e) {
             logoutResponse =
                     LogoutResponse.builder()
-                            .errorCode(LogoutResponse.ERROR)
+                            .errorCode(e.getErrorCode())
                             .message(e.getMessage())
                             .build();
         }
@@ -166,19 +416,19 @@ public class ServiceController {
     private void checkAddChainAccountRequest(AddChainAccountRequest request)
             throws AccountManagerException {
         if (request.getType() == null) {
-            throw new AddChainAccountException("type has not given");
+            throw new RequestParametersException("type has not given");
         }
 
         if (request.getPubKey() == null) {
-            throw new AddChainAccountException("pubKey has not given");
+            throw new RequestParametersException("pubKey has not given");
         }
 
         if (request.getSecKey() == null) {
-            throw new AddChainAccountException("secKey has not given");
+            throw new RequestParametersException("secKey has not given");
         }
 
         if (request.getIsDefault() == null) {
-            throw new AddChainAccountException("isDefault has not given");
+            throw new RequestParametersException("isDefault has not given");
         }
     }
 
@@ -222,14 +472,70 @@ public class ServiceController {
         return restResponse;
     }
 
-    private void checkSetDefaultAccountRequest(SetDefaultAccountRequest request)
-            throws SetChainAccountException {
+    private void checkRemoveChainAccountRequest(RemoveChainAccountRequest request)
+            throws RequestParametersException {
         if (request.getType() == null) {
-            throw new SetChainAccountException("type has not given");
+            throw new RequestParametersException("type has not given");
         }
 
         if (request.getKeyID() == null) {
-            throw new SetChainAccountException("pubKey has not given");
+            throw new RequestParametersException("pubKey has not given");
+        }
+    }
+
+    @RequestMapping(
+            value = "/auth/removeChainAccount",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object removeChainAccount(@RequestBody String params) {
+        RestRequest<RemoveChainAccountRequest> restRequest;
+        RestResponse restResponse;
+        try {
+            restRequest =
+                    objectMapper.readValue(
+                            params, new TypeReference<RestRequest<RemoveChainAccountRequest>>() {});
+        } catch (Exception e) {
+            restResponse = RestResponse.newFailed(e.getMessage());
+            return restResponse;
+        }
+
+        try {
+
+            RemoveChainAccountRequest removeChainAccountRequest = restRequest.getData();
+            checkRemoveChainAccountRequest(removeChainAccountRequest);
+
+            Integer keyID = removeChainAccountRequest.getKeyID();
+            String type = removeChainAccountRequest.getType();
+
+            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+            ua.removeChainAccount(keyID, type);
+
+            serviceContext.getUaManager().setUA(ua); // update to db
+
+            RemoveChainAccountResponse removeChainAccountResponse =
+                    RemoveChainAccountResponse.builder().errorCode(0).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(removeChainAccountResponse);
+        } catch (Exception e) {
+            RemoveChainAccountResponse removeChainAccountResponse =
+                    RemoveChainAccountResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(removeChainAccountResponse);
+        }
+        return restResponse;
+    }
+
+    private void checkSetDefaultAccountRequest(SetDefaultAccountRequest request)
+            throws RequestParametersException {
+        if (request.getType() == null) {
+            throw new RequestParametersException("type has not given");
+        }
+
+        if (request.getKeyID() == null) {
+            throw new RequestParametersException("pubKey has not given");
         }
     }
 
@@ -260,11 +566,14 @@ public class ServiceController {
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
             ChainAccount chainAccount = ua.getChainAccountByKeyID(keyID);
             if (chainAccount == null) {
-                throw new SetChainAccountException("keyID " + keyID.intValue() + " not found");
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountNotExist.getErrorCode(),
+                        "keyID " + keyID.intValue() + " not found");
             }
 
             if (!chainAccount.getType().equals(type)) {
-                throw new SetChainAccountException(
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountTypeNotFound.getErrorCode(),
                         "keyID " + keyID.intValue() + " of type " + type + " not found");
             }
 
@@ -326,7 +635,7 @@ public class ServiceController {
 
             String identity = restRequest.getData().identity;
             if (identity == null || identity.length() == 0) {
-                throw new AccountManagerException("identity is not given");
+                throw new RequestParametersException("identity is not given");
             }
 
             UniversalAccount ua = serviceContext.getUaManager().getUAByChainAccount(identity);

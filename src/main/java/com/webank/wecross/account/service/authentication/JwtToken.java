@@ -3,6 +3,7 @@ package com.webank.wecross.account.service.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.Date;
+import java.util.Objects;
 
 public class JwtToken {
     public static final String TOKEN_PREFIX = "Bearer ";
@@ -44,5 +45,18 @@ public class JwtToken {
         if (jwt == null) {
             jwt = JWT.decode(tokenStr);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JwtToken)) return false;
+        JwtToken token = (JwtToken) o;
+        return Objects.equals(getTokenStr(), token.getTokenStr());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTokenStr());
     }
 }

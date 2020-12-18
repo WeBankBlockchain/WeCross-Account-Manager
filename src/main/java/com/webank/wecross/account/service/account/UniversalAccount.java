@@ -3,13 +3,14 @@ package com.webank.wecross.account.service.account;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
-import com.webank.wecross.account.service.exception.AddChainAccountException;
-import com.webank.wecross.account.service.exception.SetChainAccountException;
+import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import jdk.nashorn.internal.objects.annotations.Getter;
 import jdk.nashorn.internal.objects.annotations.Setter;
 import lombok.Builder;
@@ -27,6 +28,8 @@ public class UniversalAccount {
 
     @JsonIgnore private String password;
 
+    @JsonIgnore private String salt;
+
     @JsonIgnore private String tokenSec;
 
     @JsonIgnore private String secKey;
@@ -34,6 +37,12 @@ public class UniversalAccount {
     @JsonIgnore private String role;
 
     @JsonIgnore private Map<String, Map<Integer, ChainAccount>> type2ChainAccounts;
+
+    @JsonIgnore private Queue<ChainAccount> chainAccounts2Remove;
+
+    @JsonIgnore private int latestKeyID;
+
+    private final Long version; // The state of ua, update by db automatically
 
     @Setter
     public void setChainAccounts(List<ChainAccount> chainAccounts) {
@@ -63,16 +72,16 @@ public class UniversalAccount {
         return chainAccounts;
     }
 
-    public void addChainAccount(ChainAccount chainAccount) throws AddChainAccountException {
+    public void addChainAccount(ChainAccount chainAccount) throws AccountManagerException {
         if (isChainAccountExist(chainAccount)) {
-            throw new AddChainAccountException("chain account exists");
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountExist.getErrorCode(), "chain account exists");
         }
         if (type2ChainAccounts == null) {
             type2ChainAccounts = new HashMap<>();
         }
 
         type2ChainAccounts.putIfAbsent(chainAccount.getType(), new LinkedHashMap<>());
-
         Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
         if (chainAccount.isDefault) {
             for (ChainAccount ca : chainAccountMap.values()) {
@@ -83,13 +92,53 @@ public class UniversalAccount {
             chainAccount.setDefault(true);
         }
 
-        chainAccount.setKeyID(new Integer(getChainAccounts().size()));
+        chainAccount.setKeyID(latestKeyID++);
         chainAccountMap.putIfAbsent(chainAccount.getKeyID(), chainAccount);
     }
 
-    public void setChainAccount(ChainAccount chainAccount) throws SetChainAccountException {
+    public void removeChainAccount(Integer id, String type) throws AccountManagerException {
+        if (type2ChainAccounts == null) {
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountNotExist.getErrorCode(),
+                    "Chain account not found, id: " + id + " type: " + type);
+        }
+
+        if (!type2ChainAccounts.containsKey(type)) {
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountNotExist.getErrorCode(),
+                    "Chain account not found, id: " + id + " type: " + type);
+        }
+
+        Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(type);
+        ChainAccount caRemoved = chainAccountMap.remove(id);
+        if (caRemoved == null) {
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountNotExist.getErrorCode(),
+                    "Chain account not found, id: " + id + " type: " + type);
+        } // else remove success
+
+        if (caRemoved.isDefault) {
+            // Choose smallest id to be the next default
+            ChainAccount ca2Default = null;
+            for (ChainAccount ca : chainAccountMap.values()) {
+                if (ca2Default == null || ca2Default.getId() > ca.getId()) {
+                    ca2Default = ca;
+                }
+            }
+
+            if (ca2Default != null) {
+                ca2Default.setDefault(true);
+            }
+        }
+
+        // Add 2 removed list
+        getChainAccounts2Remove().offer(caRemoved);
+    }
+
+    public void setChainAccount(ChainAccount chainAccount) throws AccountManagerException {
         if (!isChainAccountExist(chainAccount)) {
-            throw new SetChainAccountException("chain account not exists");
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountNotExist.getErrorCode(), "chain account not exists");
         }
 
         if (type2ChainAccounts == null) {
@@ -131,7 +180,7 @@ public class UniversalAccount {
         type2ChainAccounts.putIfAbsent(chainAccount.getType(), new LinkedHashMap<>());
         Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
         for (ChainAccount ca : chainAccountMap.values()) {
-            if (ca.pubKey.equals(chainAccount.pubKey)) {
+            if (ca.getIdentityDetail().equals(chainAccount.getIdentityDetail())) {
                 return true;
             }
         }
@@ -151,6 +200,13 @@ public class UniversalAccount {
             }
         }
         return null;
+    }
+
+    public Queue<ChainAccount> getChainAccounts2Remove() {
+        if (chainAccounts2Remove == null) {
+            chainAccounts2Remove = new LinkedList<>();
+        }
+        return chainAccounts2Remove;
     }
 
     @Data
@@ -180,6 +236,7 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+        private Long version;
 
         @JsonProperty("isAdmin")
         private boolean isAdmin;
@@ -196,6 +253,7 @@ public class UniversalAccount {
         details.setSecKey(secKey);
         details.setRole(role);
         details.setAdmin(isAdmin);
+        details.setVersion(version);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
         for (Map.Entry<String, Map<Integer, ChainAccount>> t2cas : type2ChainAccounts.entrySet()) {
@@ -219,9 +277,12 @@ public class UniversalAccount {
         tableBean.setUaID(uaID);
         tableBean.setPub(pubKey);
         tableBean.setPassword(password);
+        tableBean.setSalt(salt);
         tableBean.setTokenSec(tokenSec);
         tableBean.setSec(secKey);
         tableBean.setRole(role);
+        tableBean.setLatestKeyID(latestKeyID);
+        tableBean.setVersion(version);
         return tableBean;
     }
 }

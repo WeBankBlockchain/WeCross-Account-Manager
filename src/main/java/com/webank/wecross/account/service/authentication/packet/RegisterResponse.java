@@ -7,12 +7,8 @@ import lombok.Data;
 @Data
 @Builder
 public class RegisterResponse {
-    public static final int SUCCESS = 0;
-    public static final int ERROR = 1;
-
     public int errorCode;
     public String message;
 
-    public String credential;
     public UniversalAccount.Info universalAccount;
 }

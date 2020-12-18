@@ -27,7 +27,7 @@ repositories {
 }
 
 sourceCompatibility = 1.8
-version '1.0.0-rc5-SNAPSHOT-0903'
+version '1.0.0'
 
 
 dependencies {
@@ -84,6 +84,8 @@ jar {
     exclude '**/*.yml'
     exclude '**/*.crt'
     exclude '**/*.key'
+    exclude '**/*.sql'
+    exclude '**/*.pem'
 
     doLast {
         copy {

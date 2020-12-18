@@ -26,13 +26,13 @@ public class SslServiceConfig {
     @Bean
     public TomcatServletWebServerFactory newTomcatServletWebServerFactory() {
 
-        String address = applicationConfig.service.address;
-        int port = applicationConfig.service.port;
-        boolean sslOn = applicationConfig.service.sslOn;
+        String address = applicationConfig.getService().getAddress();
+        int port = applicationConfig.getService().getPort();
+        boolean sslOn = applicationConfig.getService().isSslOn();
 
         System.out.println(
                 "Initializing TomcatServletWebServerFactory: "
-                        + applicationConfig.service.toString());
+                        + applicationConfig.getService().toString());
 
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
 
@@ -52,9 +52,9 @@ public class SslServiceConfig {
     }
 
     private void setupSslService(TomcatServletWebServerFactory factory) throws Exception {
-        String sslKey = applicationConfig.service.sslKey;
-        String sslCert = applicationConfig.service.sslCert;
-        String caCert = applicationConfig.service.caCert;
+        String sslKey = applicationConfig.getService().getSslKey();
+        String sslCert = applicationConfig.getService().getSslCert();
+        String caCert = applicationConfig.getService().getCaCert();
 
         Ssl ssl = new Ssl();
         ssl.setClientAuth(Ssl.ClientAuth.NEED);

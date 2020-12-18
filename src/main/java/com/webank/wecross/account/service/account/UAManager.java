@@ -6,6 +6,8 @@ import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.JPAException;
+import com.webank.wecross.account.service.exception.UndefinedErrorException;
+import com.webank.wecross.account.service.utils.PassWordUtility;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -54,6 +56,7 @@ public class UAManager {
         }
 
         try {
+            universalAccountTableBean.setUpdateTimestamp(System.currentTimeMillis());
             universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
         } catch (Exception e) {
             throw new JPAException("set ua failed: " + e.getMessage());
@@ -63,9 +66,22 @@ public class UAManager {
             chainAccountTableJPA.saveAll(chainAccountTableBeanList);
 
         } catch (Exception e) {
-            throw new JPAException(
-                    "set chain account failed (chain account existing?): " + e.getMessage());
+            logger.debug(
+                    "Set chain account failed, chain account is owned by other UA? "
+                            + e.getMessage());
+            throw new JPAException("Chain account is owned by other UA");
         }
+
+        try {
+            while (!ua.getChainAccounts2Remove().isEmpty()) {
+                ChainAccount ca2Remove = ua.getChainAccounts2Remove().peek();
+                chainAccountTableJPA.deleteById(ca2Remove.getId());
+                ua.getChainAccounts2Remove().remove(ca2Remove);
+            }
+        } catch (Exception e) {
+            throw new JPAException("Remove chain account failed: " + e.getMessage());
+        }
+
         chainAccountTableJPA.flush();
     }
 
@@ -100,12 +116,13 @@ public class UAManager {
 
             logger.info("Found adminUA. Check: {}", username);
             if (!admin.getUsername().equals(username)) {
-                throw new AccountManagerException("Invalid adminUA usernmame: " + username);
+                throw new UndefinedErrorException("Invalid adminUA username: " + username);
             }
 
-            if (!admin.getPassword().equals(password)) {
+            if (!admin.getPassword()
+                    .equals(PassWordUtility.mixPassWithSalt(password, admin.getSalt()))) {
                 System.out.println("Invalid adminUA password, please check.");
-                throw new AccountManagerException("Invalid adminUA password, please check.");
+                throw new UndefinedErrorException("Invalid adminUA password, please check.");
             }
 
         } catch (UsernameNotFoundException e) {

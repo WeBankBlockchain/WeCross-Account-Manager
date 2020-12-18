@@ -2,6 +2,8 @@ package com.webank.wecross.account.service.config;
 
 import com.webank.wecross.account.service.account.UADetailsService;
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.authcode.AuthCodeManager;
+import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.JwtAuthenticationFilter;
 import com.webank.wecross.account.service.authentication.JwtLoginFilter;
 import com.webank.wecross.account.service.authentication.JwtManager;
@@ -24,6 +26,8 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
     @Resource UADetailsService uaDetailsService;
     @Resource JwtManager jwtManager;
     @Resource UAManager uaManager;
+    @Resource AuthCodeManager authCodeManager;
+    @Resource RSAKeyPairManager rsaKeyPairManager;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -32,13 +36,23 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/auth/register"); // TODO: use one configure in cors()
+        web.ignoring()
+                .antMatchers(
+                        "/auth/register",
+                        "/auth/pub",
+                        "/auth/routerLogin",
+                        "/auth/authCode"); // TODO: use one configure in cors()
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter =
-                new JwtLoginFilter(authenticationManager(), jwtManager, uaManager);
+                new JwtLoginFilter(
+                        authenticationManager(),
+                        jwtManager,
+                        uaManager,
+                        authCodeManager,
+                        rsaKeyPairManager);
         JwtAuthenticationFilter jwtAuthenticationFilter =
                 new JwtAuthenticationFilter(authenticationManager(), jwtManager, uaManager);
 
@@ -49,7 +63,7 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
                 .csrf()
                 .disable() // TODO: enable this
                 .authorizeRequests()
-                .antMatchers("/auth/register**")
+                .antMatchers("/auth/routerLogin", "/auth/register**")
                 .permitAll()
 
                 // TODO: check role

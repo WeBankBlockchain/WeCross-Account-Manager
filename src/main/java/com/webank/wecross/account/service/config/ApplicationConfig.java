@@ -27,6 +27,11 @@ import org.slf4j.LoggerFactory;
     expires = 18000 # 5 h
     noActiveExpires = 600 # 10 min
 
+[encrypt]
+    # for http request data encrypt
+    privateKeyFile = 'classpath:private.pem'
+    publicKeyFile = classpath:public.pem'
+
 [db]
     # for connect database
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
@@ -37,10 +42,12 @@ import org.slf4j.LoggerFactory;
 public class ApplicationConfig {
     private static Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
 
-    public Service service;
-    public Admin admin;
-    public Auth auth;
-    public DB db;
+    private Service service;
+    private Admin admin;
+    private Encrypt encrypt;
+    private Auth auth;
+    private DB db;
+    private Ext ext;
 
     public static ApplicationConfig parseFromFile(String filePath) throws ConfigurationException {
         Toml toml = FileUtility.readToml(filePath);
@@ -53,20 +60,83 @@ public class ApplicationConfig {
         this.admin = new Admin(toml);
         this.auth = new Auth(toml);
         this.db = new DB(toml);
+        this.encrypt = new Encrypt(toml);
+        this.ext = new Ext(toml);
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public void setService(Service service) {
+        this.service = service;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
+    }
+
+    public Encrypt getEncrypt() {
+        return encrypt;
+    }
+
+    public void setEncrypt(Encrypt encrypt) {
+        this.encrypt = encrypt;
+    }
+
+    public Auth getAuth() {
+        return auth;
+    }
+
+    public void setAuth(Auth auth) {
+        this.auth = auth;
+    }
+
+    public DB getDb() {
+        return db;
+    }
+
+    public void setDb(DB db) {
+        this.db = db;
+    }
+
+    public Ext getExt() {
+        return ext;
+    }
+
+    public void setExt(Ext ext) {
+        this.ext = ext;
     }
 
     @Override
     public String toString() {
-        return "ApplicationConfig{" + "service=" + service + ", auth=" + auth + ", db=" + db + '}';
+        return "ApplicationConfig{"
+                + "service="
+                + service
+                + ", admin="
+                + admin
+                + ", encrypt="
+                + encrypt
+                + ", auth="
+                + auth
+                + ", db="
+                + db
+                + ", ext="
+                + ext
+                + '}';
     }
 
     class Service {
-        public String address;
-        public int port;
-        public String sslKey;
-        public String sslCert;
-        public String caCert;
-        public boolean sslOn;
+        private String address;
+        private int port;
+        private String sslKey;
+        private String sslCert;
+        private String caCert;
+        private boolean sslOn;
 
         Service(Toml toml) throws ConfigurationException {
             this.address = parseString(toml, "service.address");
@@ -78,6 +148,54 @@ public class ApplicationConfig {
                 this.caCert = parseString(toml, "service.caCert");
             }
             logger.info("Load configuration: " + this.toString());
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public String getSslKey() {
+            return sslKey;
+        }
+
+        public void setSslKey(String sslKey) {
+            this.sslKey = sslKey;
+        }
+
+        public String getSslCert() {
+            return sslCert;
+        }
+
+        public void setSslCert(String sslCert) {
+            this.sslCert = sslCert;
+        }
+
+        public String getCaCert() {
+            return caCert;
+        }
+
+        public void setCaCert(String caCert) {
+            this.caCert = caCert;
+        }
+
+        public boolean isSslOn() {
+            return sslOn;
+        }
+
+        public void setSslOn(boolean sslOn) {
+            this.sslOn = sslOn;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
         }
 
         @Override
@@ -103,9 +221,54 @@ public class ApplicationConfig {
         }
     }
 
+    class Encrypt {
+
+        public Encrypt(Toml toml) {
+            try {
+                this.privateKey = parseString(toml, "encrypt.privateKeyFile");
+                this.publicKey = parseString(toml, "encrypt.publicKeyFile");
+            } catch (ConfigurationException e) {
+                logger.debug("e: ", e);
+            }
+            logger.info(" rsa private: {}", this.privateKey);
+            logger.info(" rsa public: {}", this.publicKey);
+        }
+
+        private String privateKey;
+        private String publicKey;
+
+        public String getPrivateKey() {
+            return privateKey;
+        }
+
+        public void setPrivateKey(String privateKey) {
+            this.privateKey = privateKey;
+        }
+
+        public String getPublicKey() {
+            return publicKey;
+        }
+
+        public void setPublicKey(String publicKey) {
+            this.publicKey = publicKey;
+        }
+
+        @Override
+        public String toString() {
+            return "Encrypt{"
+                    + "privateKey='"
+                    + privateKey
+                    + '\''
+                    + ", publicKey='"
+                    + publicKey
+                    + '\''
+                    + '}';
+        }
+    }
+
     class Admin {
-        public String username;
-        public String password;
+        private String username;
+        private String password;
 
         Admin(Toml toml) throws ConfigurationException {
             try {
@@ -114,7 +277,38 @@ public class ApplicationConfig {
                 this.username = parseString(toml, "admin.name");
             }
             this.password = parseString(toml, "admin.password");
+
+            if (this.username.length() >= 256) {
+                throw new ConfigurationException(
+                        "admin.username(length:"
+                                + this.username.length()
+                                + ") must smaller than 256");
+            }
+
+            if (this.password.length() >= 256) {
+                throw new ConfigurationException(
+                        "admin.password(length:"
+                                + this.password.length()
+                                + ") must smaller than 256");
+            }
+
             logger.info("Load configuration: " + this.username);
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
 
         @Override
@@ -124,15 +318,20 @@ public class ApplicationConfig {
     }
 
     class Auth {
-        public final long EXPIRES_LIMIT = 300000000; // second
-        public String name;
-        public long expires;
-        public long noActiveExpires;
+        private static final long EXPIRES_LIMIT = 300000000; // second
+        private String name;
+        private long expires;
+        private long noActiveExpires;
 
         Auth(Toml toml) throws ConfigurationException {
             this.name = parseString(toml, "auth.name");
             this.expires = parseULong(toml, "auth.expires", 18000); // default 5h
             this.noActiveExpires = parseULong(toml, "auth.noActiveExpires", 600); // default 600s
+
+            if (this.name.length() >= 256) {
+                throw new ConfigurationException(
+                        "auth.name(length:" + this.name.length() + ") must smaller than 256");
+            }
 
             if (this.expires > EXPIRES_LIMIT) {
                 throw new ConfigurationException(
@@ -150,6 +349,30 @@ public class ApplicationConfig {
             logger.info("Load configuration: " + this.toString());
         }
 
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public long getExpires() {
+            return expires;
+        }
+
+        public void setExpires(long expires) {
+            this.expires = expires;
+        }
+
+        public long getNoActiveExpires() {
+            return noActiveExpires;
+        }
+
+        public void setNoActiveExpires(long noActiveExpires) {
+            this.noActiveExpires = noActiveExpires;
+        }
+
         @Override
         public String toString() {
             return "Auth{"
@@ -165,9 +388,9 @@ public class ApplicationConfig {
     }
 
     class DB {
-        public String url;
-        public String username;
-        public String password;
+        private String url;
+        private String username;
+        private String password;
 
         DB(Toml toml) throws ConfigurationException {
             this.url = parseString(toml, "db.url");
@@ -175,6 +398,30 @@ public class ApplicationConfig {
             this.password = parseString(toml, "db.password");
 
             logger.info("Load configuration: " + this.toString());
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
 
         @Override
@@ -190,6 +437,29 @@ public class ApplicationConfig {
                     + password
                     + '\''
                     + '}';
+        }
+    }
+
+    /** Ext configurations */
+    class Ext {
+
+        private boolean allowImageAuthCodeEmpty = true;
+
+        public Ext(Toml toml) {
+            this.allowImageAuthCodeEmpty = parseBoolean(toml, "ext.allowImageAuthCodeEmpty", true);
+        }
+
+        public boolean isAllowImageAuthCodeEmpty() {
+            return allowImageAuthCodeEmpty;
+        }
+
+        public void setAllowImageAuthCodeEmpty(boolean allowImageAuthCodeEmpty) {
+            this.allowImageAuthCodeEmpty = allowImageAuthCodeEmpty;
+        }
+
+        @Override
+        public String toString() {
+            return "Ext{" + "allowImageAuthCodeEmpty=" + allowImageAuthCodeEmpty + '}';
         }
     }
 
@@ -242,13 +512,14 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Toml toml, String key, String defaultReturn) {
         try {
             return parseString(toml, key);
         } catch (ConfigurationException e) {
             return defaultReturn;
         }
-    }
+    }*/
 
     private static String parseString(Toml toml, String key) throws ConfigurationException {
         String res = toml.getString(key);
@@ -260,6 +531,7 @@ public class ApplicationConfig {
         return res;
     }
 
+    /*
     private static String parseString(Map<String, String> map, String key)
             throws ConfigurationException {
         String res = map.get(key);
@@ -270,6 +542,7 @@ public class ApplicationConfig {
         }
         return res;
     }
+    */
 
     private static String parseStringBase(Map<String, Object> map, String key)
             throws ConfigurationException {
