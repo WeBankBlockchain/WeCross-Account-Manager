@@ -17,10 +17,10 @@ import com.webank.wecross.account.service.authentication.JwtToken;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse;
+import com.webank.wecross.account.service.authentication.packet.ChangePasswordRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
-import com.webank.wecross.account.service.authentication.packet.ModifyPasswordRequest;
 import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
 import com.webank.wecross.account.service.authentication.packet.PubResponse;
 import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
@@ -68,7 +68,7 @@ public class ServiceController {
     }
     */
 
-    private void checkModifyPasswordRequest(ModifyPasswordRequest request)
+    private void checkChangePasswordRequest(ChangePasswordRequest request)
             throws AccountManagerException {
         if (request.getUsername() == null) {
             throw new RequestParametersException("username has not given");
@@ -84,6 +84,10 @@ public class ServiceController {
 
         if (request.getNewPassword().length() > 256) {
             throw new RequestParametersException("new password is too long, limit 256");
+        }
+
+        if (request.getRandomToken() == null) {
+            throw new RequestParametersException("random token has not given");
         }
     }
 
@@ -116,33 +120,52 @@ public class ServiceController {
     }
 
     @RequestMapping(
-            value = "/auth/modifyPassword",
+            value = "/auth/changePassword",
             method = RequestMethod.POST,
             produces = "application/json")
-    private Object modifyPassword(@RequestBody String params) {
+    private Object changePassword(@RequestBody String params) {
         RestResponse restResponse = RestResponse.newSuccess();
         try {
 
-            RestRequest<ModifyPasswordRequest> restRequest =
+            /** The requested data is encrypted by RSA, first decrypt the data */
+            RestRequest<String> restRequest =
+                    objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
+
+            RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
+            byte[] bytesParams =
+                    RSAUtility.decryptBase64(
+                            restRequest.getData(), keyPair.getKeyPair().getPrivate());
+
+            ChangePasswordRequest changePasswordRequest =
                     objectMapper.readValue(
-                            params, new TypeReference<RestRequest<ModifyPasswordRequest>>() {});
+                            bytesParams, new TypeReference<ChangePasswordRequest>() {});
 
-            ModifyPasswordRequest modifyPasswordRequest = restRequest.getData();
+            logger.info("ChangePasswordRequest: {}", changePasswordRequest);
 
-            logger.info("ModifyPasswordRequest: {}", modifyPasswordRequest);
-            checkModifyPasswordRequest(modifyPasswordRequest);
+            checkChangePasswordRequest(changePasswordRequest);
+
+            serviceContext
+                    .getAuthCodeManager()
+                    .authToken(
+                            changePasswordRequest.getRandomToken(),
+                            changePasswordRequest.getAuthCode());
 
             UniversalAccount ua =
-                    serviceContext.getUaManager().getUA(modifyPasswordRequest.getUsername());
+                    serviceContext.getUaManager().getUA(changePasswordRequest.getUsername());
             String passwordWithSalt =
-                    PassWordUtility.mixPassWithSalt(ua.getPassword(), ua.getSalt());
+                    PassWordUtility.mixPassWithSalt(
+                            changePasswordRequest.getOldPassword(), ua.getSalt());
             if (!passwordWithSalt.equals(ua.getPassword())) {
-                throw new RuntimeException("password incorrect.");
+                throw new AccountManagerException(
+                        ErrorCode.AccountOrPasswordIncorrect.getErrorCode(),
+                        "account or password incorrect");
             }
 
+            String newSalt = UUID.randomUUID().toString();
             ua.setPassword(
                     PassWordUtility.mixPassWithSalt(
-                            modifyPasswordRequest.getNewPassword(), UUID.randomUUID().toString()));
+                            changePasswordRequest.getNewPassword(), newSalt));
+            ua.setSalt(newSalt);
 
             // update password
             serviceContext.getUaManager().setUA(ua);
