@@ -64,7 +64,7 @@ public class AuthCodeManager {
     public void authToken(String randomToken, String imageCode) throws AccountManagerException {
 
         /** Configure authentication codes not to be checked */
-        if (allowImageAuthCodeEmpty && (imageCode == null || "".equals(imageCode))) {
+        if (allowImageAuthCodeEmpty && (imageCode == null || "".equals(imageCode.trim()))) {
             authToken(randomToken);
             return;
         }
