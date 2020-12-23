@@ -5,6 +5,7 @@ import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.JPAException;
 import com.webank.wecross.account.service.exception.UndefinedErrorException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
@@ -36,7 +37,8 @@ public class UAManager {
         List<ChainAccountTableBean> chainAccountTableBeanList =
                 chainAccountTableJPA.findByUsernameOrderByKeyIDDesc(username);
         if (universalAccountTableBean == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+            throw new AccountManagerException(
+                    ErrorCode.UAAccountNotExist.getErrorCode(), "User not found: " + username);
         }
 
         UniversalAccount ua =
@@ -125,12 +127,14 @@ public class UAManager {
                 throw new UndefinedErrorException("Invalid adminUA password, please check.");
             }
 
-        } catch (UsernameNotFoundException e) {
-            // not found
-            logger.info("AdminUA not found. Generate: {}", username);
-            admin = UniversalAccountBuilder.newUA(username, password);
-            setUA(admin);
-            logger.info("AdminUA generate success!");
+        } catch (AccountManagerException e) {
+            if (e.getErrorCode() == ErrorCode.UAAccountNotExist.getErrorCode()) {
+                // not found
+                logger.info("AdminUA not found. Generate: {}", username);
+                admin = UniversalAccountBuilder.newUA(username, password);
+                setUA(admin);
+                logger.info("AdminUA generate success!");
+            }
         }
     }
 
