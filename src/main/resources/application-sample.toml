@@ -27,7 +27,8 @@
     username = 'root'
     password = ''
     # for mysql sensitive fields encrypt
-    encryptPassword = 'rIBJD38jqSMR@CSM'
+    # if this field is empty of not configured, the encrypt operation will not take place
+    encryptKey = 'rIBJD38jqSMR@CSM'
 
 [ext]
     # for image auth code, allow image auth token empty

@@ -27,7 +27,7 @@
     username = 'root'
     password = ''
     # for mysql sensitive fields encrypt
-    encryptPassword = 'rIBJD38jqSMR@CSM'
+    encryptKey = 'rIBJD38jqSMR@CSM'
 
 [ext]
     # for image auth code
