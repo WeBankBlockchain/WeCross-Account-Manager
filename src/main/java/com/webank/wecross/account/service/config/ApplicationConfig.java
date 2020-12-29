@@ -391,11 +391,13 @@ public class ApplicationConfig {
         private String url;
         private String username;
         private String password;
+        private String encryptPassword;
 
         DB(Toml toml) throws ConfigurationException {
             this.url = parseString(toml, "db.url");
             this.username = parseString(toml, "db.username");
             this.password = parseString(toml, "db.password");
+            this.encryptPassword = parseString(toml, "db.encryptPassword");
 
             logger.info("Load configuration: " + this.toString());
         }
@@ -424,6 +426,14 @@ public class ApplicationConfig {
             this.password = password;
         }
 
+        public String getEncryptPassword() {
+            return encryptPassword;
+        }
+
+        public void setEncryptPassword(String encryptPassword) {
+            this.encryptPassword = encryptPassword;
+        }
+
         @Override
         public String toString() {
             return "DB{"
@@ -435,6 +445,9 @@ public class ApplicationConfig {
                     + '\''
                     + ", password='"
                     + password
+                    + '\''
+                    + ", fieldEncryptPassword='"
+                    + encryptPassword
                     + '\''
                     + '}';
         }
