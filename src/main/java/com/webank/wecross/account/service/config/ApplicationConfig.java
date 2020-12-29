@@ -446,7 +446,7 @@ public class ApplicationConfig {
                     + ", password='"
                     + password
                     + '\''
-                    + ", fieldEncryptPassword='"
+                    + ", encryptPassword='"
                     + encryptPassword
                     + '\''
                     + '}';

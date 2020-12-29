@@ -1,9 +1,13 @@
 package com.webank.wecross.account.service.config;
 
+import com.webank.wecross.account.service.RestRequestFilter;
 import com.webank.wecross.account.service.account.LoginSalt;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
+import com.webank.wecross.account.service.crypto.CryptoFactory;
+import com.webank.wecross.account.service.crypto.CryptoInterface;
+import com.webank.wecross.account.service.crypto.CryptoType;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
@@ -60,7 +64,18 @@ public class UAManagerConfig {
     }
 
     @Bean
-    public RSAKeyPairManager newRSAKeyPairManager()
+    public RestRequestFilter newRestRequestFilter()
+            throws InvalidKeySpecException, NoSuchAlgorithmException, ConfigurationException,
+                    IOException {
+        CryptoInterface cryptoInterface = CryptoFactory.newCryptoInstance(CryptoType.RSA_BASE64);
+        cryptoInterface.setKey(initRSAKeyPairManager());
+
+        RestRequestFilter restRequestFilter = new RestRequestFilter();
+        restRequestFilter.setCryptoInterface(cryptoInterface);
+        return restRequestFilter;
+    }
+
+    public RSAKeyPairManager initRSAKeyPairManager()
             throws NoSuchAlgorithmException, ConfigurationException, InvalidKeySpecException,
                     IOException {
         RSAKeyPairManager rsaKeyPairManager = new RSAKeyPairManager();

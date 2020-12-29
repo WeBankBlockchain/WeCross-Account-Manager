@@ -6,11 +6,16 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.account.service.crypto.CryptoInterface;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** */
 public class RestRequestFilter {
+    private static Logger logger = LoggerFactory.getLogger(RestRequestFilter.class);
+
     private Set<String> encryptURLSets = new HashSet<>();
     private CryptoInterface cryptoInterface;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -23,6 +28,8 @@ public class RestRequestFilter {
 
         /** ObjectMapper configure */
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        logger.info("URL encrypt sets: {}", Arrays.toString(encryptURLSets.toArray()));
     }
 
     public CryptoInterface getCryptoInterface() {
@@ -50,7 +57,7 @@ public class RestRequestFilter {
      * @return
      * @throws Exception
      */
-    public Object fetchRequestData(String url, String data, Class<?> classz) throws Exception {
+    public Object fetchRequestObject(String url, String data, Class<?> classz) throws Exception {
 
         if (isEncrypt(url)) {
             /** The requested data field is encrypted by RSA, decrypt the data */

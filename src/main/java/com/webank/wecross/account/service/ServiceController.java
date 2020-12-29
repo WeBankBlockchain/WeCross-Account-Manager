@@ -1,8 +1,5 @@
 package com.webank.wecross.account.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.account.service.account.ChainAccount;
 import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.UAManager;
@@ -29,11 +26,11 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
+import com.webank.wecross.account.service.crypto.CryptoRSABase64Impl;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
-import com.webank.wecross.account.service.utils.RSAUtility;
 import java.util.Base64;
 import java.util.UUID;
 import javax.annotation.Resource;
@@ -48,11 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ServiceController {
     private static Logger logger = LoggerFactory.getLogger(ServiceController.class);
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    public ServiceController() {
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
+    public ServiceController() {}
 
     @Resource ServiceContext serviceContext;
 
@@ -60,13 +53,6 @@ public class ServiceController {
     private Object test() {
         return "OK!";
     }
-
-    /*
-    @RequestMapping(value = "/**", method = RequestMethod.POST, produces = "application/json")
-    private Object echo(@RequestBody String params) {
-        return params;
-    }
-    */
 
     private void checkChangePasswordRequest(ChangePasswordRequest request)
             throws AccountManagerException {
@@ -127,18 +113,14 @@ public class ServiceController {
         RestResponse restResponse = RestResponse.newSuccess();
         try {
 
-            /** The requested data is encrypted by RSA, first decrypt the data */
-            RestRequest<String> restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
-
-            RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
-            byte[] bytesParams =
-                    RSAUtility.decryptBase64(
-                            restRequest.getData(), keyPair.getKeyPair().getPrivate());
-
             ChangePasswordRequest changePasswordRequest =
-                    objectMapper.readValue(
-                            bytesParams, new TypeReference<ChangePasswordRequest>() {});
+                    (ChangePasswordRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/changePassword",
+                                            params,
+                                            ChangePasswordRequest.class);
 
             logger.info("ChangePasswordRequest: {}", changePasswordRequest);
 
@@ -201,18 +183,20 @@ public class ServiceController {
     private Object routerLogin(@RequestBody String params) {
         RestResponse restResponse = RestResponse.newSuccess();
         try {
-
-            RestRequest<LoginRequest> restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<LoginRequest>>() {});
+            LoginRequest loginRequest =
+                    (LoginRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/routerLogin", params, LoginRequest.class);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("routerLogin params: {}", restRequest.getData());
+                logger.debug("routerLogin params: {}", loginRequest);
             }
 
             JwtManager jwtManager = serviceContext.getJwtManager();
             UAManager uaManager = serviceContext.getUaManager();
-            String username = restRequest.getData().getUsername();
+            String username = loginRequest.getUsername();
 
             JwtToken jwtToken = jwtManager.newToken(username);
             jwtManager.setTokenActive(jwtToken); // active it during login
@@ -254,17 +238,12 @@ public class ServiceController {
 
         RestResponse restResponse = RestResponse.newSuccess();
         try {
-            /** The requested data is encrypted by RSA, first decrypt the data */
-            RestRequest<String> restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<String>>() {});
-
-            RSAKeyPairManager keyPair = serviceContext.getRsaKeyPairManager();
-            byte[] bytesParams =
-                    RSAUtility.decryptBase64(
-                            restRequest.getData(), keyPair.getKeyPair().getPrivate());
-
             RegisterRequest registerRequest =
-                    objectMapper.readValue(bytesParams, new TypeReference<RegisterRequest>() {});
+                    (RegisterRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/register", params, RegisterRequest.class);
 
             if (logger.isDebugEnabled()) {
                 logger.debug("register request params: {}", registerRequest);
@@ -329,7 +308,11 @@ public class ServiceController {
     private Object getPub() {
         RestResponse restResponse = null;
         try {
-            RSAKeyPairManager rsaKeyPairManager = serviceContext.getRsaKeyPairManager();
+            CryptoRSABase64Impl cryptoRSABase64Impl =
+                    (CryptoRSABase64Impl)
+                            serviceContext.getRestRequestFilter().getCryptoInterface();
+            RSAKeyPairManager rsaKeyPairManager =
+                    (RSAKeyPairManager) cryptoRSABase64Impl.getRsaKeyPairManager();
             String pub =
                     Base64.getEncoder()
                             .encodeToString(
@@ -460,20 +443,18 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object addChainAccount(@RequestBody String params) {
-        RestRequest<AddChainAccountRequest> restRequest;
         RestResponse restResponse;
         try {
-            restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<AddChainAccountRequest>>() {});
-        } catch (Exception e) {
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
 
-        try {
+            AddChainAccountRequest addChainAccountRequest =
+                    (AddChainAccountRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/addChainAccount",
+                                            params,
+                                            AddChainAccountRequest.class);
 
-            AddChainAccountRequest addChainAccountRequest = restRequest.getData();
             checkAddChainAccountRequest(addChainAccountRequest);
 
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
@@ -511,20 +492,19 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object removeChainAccount(@RequestBody String params) {
-        RestRequest<RemoveChainAccountRequest> restRequest;
         RestResponse restResponse;
-        try {
-            restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<RemoveChainAccountRequest>>() {});
-        } catch (Exception e) {
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
 
         try {
 
-            RemoveChainAccountRequest removeChainAccountRequest = restRequest.getData();
+            RemoveChainAccountRequest removeChainAccountRequest =
+                    (RemoveChainAccountRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/removeChainAccount",
+                                            params,
+                                            RemoveChainAccountRequest.class);
+
             checkRemoveChainAccountRequest(removeChainAccountRequest);
 
             Integer keyID = removeChainAccountRequest.getKeyID();
@@ -567,20 +547,19 @@ public class ServiceController {
             method = RequestMethod.POST,
             produces = "application/json")
     private Object setDefaultAccount(@RequestBody String params) {
-        RestRequest<SetDefaultAccountRequest> restRequest;
         RestResponse restResponse;
-        try {
-            restRequest =
-                    objectMapper.readValue(
-                            params, new TypeReference<RestRequest<SetDefaultAccountRequest>>() {});
-        } catch (Exception e) {
-            restResponse = RestResponse.newFailed(e.getMessage());
-            return restResponse;
-        }
 
         try {
 
-            SetDefaultAccountRequest setDefaultAccountRequest = restRequest.getData();
+            SetDefaultAccountRequest setDefaultAccountRequest =
+                    (SetDefaultAccountRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/setDefaultAccount",
+                                            params,
+                                            SetDefaultAccountRequest.class);
+
             checkSetDefaultAccountRequest(setDefaultAccountRequest);
 
             Integer keyID = setDefaultAccountRequest.getKeyID();
@@ -650,13 +629,18 @@ public class ServiceController {
             return RestResponse.newFailed("Please use admin to query");
         }
 
-        RestRequest<UARequest> restRequest;
         RestResponse restResponse;
         try {
-            restRequest =
-                    objectMapper.readValue(params, new TypeReference<RestRequest<UARequest>>() {});
+            UARequest uARequest =
+                    (UARequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/getUniversalAccountByChainAccountIdentity",
+                                            params,
+                                            UARequest.class);
 
-            String identity = restRequest.getData().identity;
+            String identity = uARequest.identity;
             if (identity == null || identity.length() == 0) {
                 throw new RequestParametersException("identity is not given");
             }
