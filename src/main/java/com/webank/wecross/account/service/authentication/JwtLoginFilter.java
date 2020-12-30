@@ -1,21 +1,18 @@
 package com.webank.wecross.account.service.authentication;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webank.wecross.account.service.RestRequest;
+import com.webank.wecross.account.service.RestRequestFilter;
 import com.webank.wecross.account.service.RestResponse;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
-import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
 import com.webank.wecross.account.service.authentication.packet.LoginRequest;
 import com.webank.wecross.account.service.authentication.packet.LoginResponse;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
-import com.webank.wecross.account.service.utils.RSAUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -39,20 +36,20 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private AuthenticationManager authenticationManager;
     private JwtManager jwtManager;
     private UAManager uaManager;
-    private RSAKeyPairManager rsaKeyPairManager;
     private AuthCodeManager authCodeManager;
+    private RestRequestFilter restRequestFilter;
 
     public JwtLoginFilter(
             AuthenticationManager authenticationManager,
             JwtManager jwtManager,
             UAManager uaManager,
             AuthCodeManager authCodeManager,
-            RSAKeyPairManager rsaKeyPairManager) {
+            RestRequestFilter restRequestFilter) {
         this.authenticationManager = authenticationManager;
         this.jwtManager = jwtManager;
         this.uaManager = uaManager;
-        this.rsaKeyPairManager = rsaKeyPairManager;
         this.authCodeManager = authCodeManager;
+        this.restRequestFilter = restRequestFilter;
         super.setFilterProcessesUrl(loginPath);
 
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -74,16 +71,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private LoginRequest parseLoginRequest(HttpServletRequest request) throws Exception {
         String body = getBodyString(request);
 
-        /** The requested data is encrypted by RSA, first decrypt the data */
-        RestRequest<String> restRequest =
-                objectMapper.readValue(body, new TypeReference<RestRequest<String>>() {});
-
-        byte[] bytesParams =
-                RSAUtility.decryptBase64(
-                        restRequest.getData(), rsaKeyPairManager.getKeyPair().getPrivate());
-
         LoginRequest loginRequest =
-                objectMapper.readValue(bytesParams, new TypeReference<LoginRequest>() {});
+                (LoginRequest)
+                        restRequestFilter.fetchRequestObject(
+                                "/auth/login", body, LoginRequest.class);
 
         if (logger.isDebugEnabled()) {
             logger.debug("login params: {}", loginRequest);
