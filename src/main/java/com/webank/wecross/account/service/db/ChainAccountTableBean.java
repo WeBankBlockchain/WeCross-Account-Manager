@@ -1,6 +1,7 @@
 package com.webank.wecross.account.service.db;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -36,6 +37,7 @@ public class ChainAccountTableBean {
     private String pub;
 
     @Column(nullable = false, columnDefinition = "text")
+    @Convert(converter = SecKeyEntryConverter.class)
     private String sec;
 
     @Column(columnDefinition = "text")

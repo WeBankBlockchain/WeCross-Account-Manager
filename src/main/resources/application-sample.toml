@@ -26,6 +26,9 @@
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
     username = 'root'
     password = ''
+    # for mysql sensitive fields encrypt
+    # if this field is empty of not configured, the encrypt operation will not take place
+    encryptKey = 'rIBJD38jqSMR@CSM'
 
 [ext]
     # for image auth code, allow image auth token empty

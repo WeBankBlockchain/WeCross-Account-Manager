@@ -95,19 +95,19 @@ public class ChainAccountBuilder {
         return account;
     }
 
-    private static void checkSecKey(String key) throws RequestParametersException {
+    public static void checkSecKey(String key) throws RequestParametersException {
         if (!SEC_KEY_PATTERN.matcher(key).find()) {
             throw new RequestParametersException("Invalid secret key:" + key);
         }
     }
 
-    private static void checkPubKey(String key) throws RequestParametersException {
+    public static void checkPubKey(String key) throws RequestParametersException {
         if (!PUB_KEY_PATTERN.matcher(key).find()) {
             throw new RequestParametersException("Invalid pub key:" + key);
         }
     }
 
-    private static void checkCertificatePem(String content) throws RequestParametersException {
+    public static void checkCertificatePem(String content) throws RequestParametersException {
         if (!CERT_PATTERN.matcher(content).find()) {
             throw new RequestParametersException("Invalid certificate file:" + content);
         }
