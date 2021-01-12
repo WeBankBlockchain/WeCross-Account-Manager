@@ -1,4 +1,6 @@
 #!/bin/bash
+dirpath="$(cd "$(dirname "$0")" && pwd)"
+cd ${dirpath}
 
 APP_NAME=com.webank.wecross.account.service.Application
 
