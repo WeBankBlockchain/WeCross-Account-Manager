@@ -1,4 +1,6 @@
 #!/bin/bash
+dirpath="$(cd "$(dirname "$0")" && pwd)"
+cd ${dirpath}
 
 APP_NAME=com.webank.wecross.account.service.Application
 
@@ -31,13 +33,13 @@ run_wecross()
 {
     if [ "$(uname)" == "Darwin" ]; then
         # Mac
-        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     elif [ "$(uname -s | grep MINGW | wc -l)" != "0" ]; then
         # Windows
-        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     else
         # GNU/Linux
-        nohup java -Djdk.tls.namedGroups="secp256k1" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     fi
 }
 
