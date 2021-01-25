@@ -22,8 +22,9 @@
     publicKeyFile = 'classpath:rsa_public.pem'
 
 [db]
-    # for connect database
-    url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
+    # for connect database, you can add other connect configs behind '?'
+    # Note: useSSL=false for connect MySQL 8.0+, if you deploy mysql remotely, we recommended you use SSL.
+    url = 'jdbc:mysql://localhost:3306/wecross_account_manager?useSSL=false'
     username = 'root'
     password = ''
     # for mysql sensitive fields encrypt
