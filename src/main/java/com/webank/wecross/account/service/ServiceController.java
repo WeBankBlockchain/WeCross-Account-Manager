@@ -468,6 +468,7 @@ public class ServiceController {
             restResponse = RestResponse.newSuccess();
             restResponse.setData(addChainAccountResponse);
         } catch (Exception e) {
+            logger.error("e: ", e);
             AddChainAccountResponse addChainAccountResponse =
                     AddChainAccountResponse.builder().errorCode(1).message(e.getMessage()).build();
             restResponse = RestResponse.newSuccess();
@@ -520,6 +521,7 @@ public class ServiceController {
             restResponse = RestResponse.newSuccess();
             restResponse.setData(removeChainAccountResponse);
         } catch (Exception e) {
+            logger.error("e: ", e);
             RemoveChainAccountResponse removeChainAccountResponse =
                     RemoveChainAccountResponse.builder()
                             .errorCode(1)
@@ -588,6 +590,7 @@ public class ServiceController {
             restResponse = RestResponse.newSuccess();
             restResponse.setData(setDefaultAccountResponse);
         } catch (Exception e) {
+            logger.error("e: ", e);
             SetDefaultAccountResponse setDefaultAccountResponse =
                     SetDefaultAccountResponse.builder()
                             .errorCode(1)
@@ -649,6 +652,7 @@ public class ServiceController {
             restResponse = RestResponse.newSuccess();
             restResponse.setData(ua.toDetails());
         } catch (Exception e) {
+            logger.error("e: ", e);
             restResponse = RestResponse.newFailed(e.getMessage());
             return restResponse;
         }
