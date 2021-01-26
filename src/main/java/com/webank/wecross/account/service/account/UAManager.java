@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class UAManager {
@@ -60,17 +61,31 @@ public class UAManager {
         try {
             universalAccountTableBean.setUpdateTimestamp(System.currentTimeMillis());
             universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            logger.error("e: ", e);
+            throw new AccountManagerException(
+                    ErrorCode.UAHasBeenModified.getErrorCode(),
+                    "The "
+                            + ua.getUsername()
+                            + "'data is being modified simultaneously, please try again.");
         } catch (Exception e) {
+            logger.error("set ua failed, e: ", e);
             throw new JPAException("set ua failed: " + e.getMessage());
         }
+
         try {
 
             chainAccountTableJPA.saveAll(chainAccountTableBeanList);
 
+        } catch (ObjectOptimisticLockingFailureException e) {
+            logger.error("e: ", e);
+            throw new AccountManagerException(
+                    ErrorCode.UAHasBeenModified.getErrorCode(),
+                    "The "
+                            + ua.getUsername()
+                            + "'data is being modified simultaneously, please try again.");
         } catch (Exception e) {
-            logger.debug(
-                    "Set chain account failed, chain account is owned by other UA? "
-                            + e.getMessage());
+            logger.error("Set chain account failed, chain account is owned by other UA? ", e);
             throw new JPAException("Chain account is owned by other UA");
         }
 
