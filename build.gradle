@@ -1,5 +1,6 @@
 plugins {
     id 'com.github.sherter.google-java-format' version '0.8'
+    id 'org.ajoberstar.grgit' version '4.0.1'
 }
 
 
@@ -27,8 +28,7 @@ repositories {
 }
 
 sourceCompatibility = 1.8
-version '1.1.0-release-01211-SNAPSHOT'
-
+version '1.1.0-dev-01310-SNAPSHOT'
 
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
@@ -36,9 +36,9 @@ dependencies {
     
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
-    compile 'org.springframework.boot:spring-boot-starter-web:2.1.13.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-security:2.1.13.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.1.13.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-web:2.3.8.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-security:2.3.8.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.3.8.RELEASE'
     compile 'mysql:mysql-connector-java:8.0.21'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.3'
     compile 'com.auth0:java-jwt:3.10.3'
@@ -87,6 +87,29 @@ jar {
     exclude '**/*.key'
     exclude '**/*.sql'
     exclude '**/*.pem'
+
+    manifest {
+        try {
+            def repo = grgit.open(dir: file('.').canonicalPath)
+            if (repo != null) {
+                def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                def branch = repo.branch.getCurrent().getName()
+                def commit = repo.head().getAbbreviatedId(40)
+
+                attributes(["Implementation-Timestamp": date,
+                            "Git-Branch"              : branch,
+                            "Git-Commit"              : commit
+                ])
+
+                logger.info("  Commit : ")
+                logger.info("  => date: {}", date)
+                logger.info("  => branch: {}", branch)
+                logger.info("  => commit: {}", commit)
+            }
+        } catch (Exception e) {
+            // logger.warn(' .git not exist, cannot found commit info')
+        }
+    }
 
     doLast {
         copy {
