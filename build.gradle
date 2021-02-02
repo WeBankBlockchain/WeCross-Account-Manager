@@ -28,7 +28,7 @@ repositories {
 }
 
 sourceCompatibility = 1.8
-version '1.1.0-dev-01310-SNAPSHOT'
+version '1.1.0-dev-02020-SNAPSHOT'
 
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
