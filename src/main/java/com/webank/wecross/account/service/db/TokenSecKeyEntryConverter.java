@@ -61,9 +61,10 @@ public class TokenSecKeyEntryConverter implements AttributeConverter<String, Str
             String decodeString = new String(decode, StandardCharsets.UTF_8);
             return decodeString;
         } catch (Exception e) {
-            logger.error(
-                    "Failed to decrypt data, maybe the password is error, please check the [db:encryptKey] field configuration.");
-            throw new RuntimeException(e.getCause());
+            logger.warn(
+                    "Failed to decrypt token_sec data and the raw data will be return, please check the password configuration[db:encryptKey]");
+            logger.trace("e: ", e);
+            return dbData;
         }
     }
 }
