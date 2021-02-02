@@ -37,6 +37,10 @@ import org.slf4j.LoggerFactory;
     url = 'jdbc:mysql://localhost:3306/wecross_account_manager'
     username = 'root'
     password = ''
+
+[ext]
+    # for image auth code
+    allowImageAuthCodeEmpty = true
 */
 
 public class ApplicationConfig {
@@ -391,11 +395,17 @@ public class ApplicationConfig {
         private String url;
         private String username;
         private String password;
+        private String encryptKey;
 
         DB(Toml toml) throws ConfigurationException {
             this.url = parseString(toml, "db.url");
             this.username = parseString(toml, "db.username");
             this.password = parseString(toml, "db.password");
+            try {
+                this.encryptKey = parseString(toml, "db.encryptKey");
+            } catch (Exception e) {
+
+            }
 
             logger.info("Load configuration: " + this.toString());
         }
@@ -424,6 +434,14 @@ public class ApplicationConfig {
             this.password = password;
         }
 
+        public String getEncryptKey() {
+            return encryptKey;
+        }
+
+        public void setEncryptKey(String encryptKey) {
+            this.encryptKey = encryptKey;
+        }
+
         @Override
         public String toString() {
             return "DB{"
@@ -435,6 +453,9 @@ public class ApplicationConfig {
                     + '\''
                     + ", password='"
                     + password
+                    + '\''
+                    + ", encryptKey='"
+                    + encryptKey
                     + '\''
                     + '}';
         }

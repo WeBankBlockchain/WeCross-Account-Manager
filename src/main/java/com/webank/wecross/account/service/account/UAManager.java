@@ -5,6 +5,7 @@ import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.JPAException;
 import com.webank.wecross.account.service.exception.UndefinedErrorException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class UAManager {
@@ -36,7 +38,8 @@ public class UAManager {
         List<ChainAccountTableBean> chainAccountTableBeanList =
                 chainAccountTableJPA.findByUsernameOrderByKeyIDDesc(username);
         if (universalAccountTableBean == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+            throw new AccountManagerException(
+                    ErrorCode.UAAccountNotExist.getErrorCode(), "User not found: " + username);
         }
 
         UniversalAccount ua =
@@ -58,17 +61,31 @@ public class UAManager {
         try {
             universalAccountTableBean.setUpdateTimestamp(System.currentTimeMillis());
             universalAccountTableJPA.saveAndFlush(universalAccountTableBean);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            logger.error("e: ", e);
+            throw new AccountManagerException(
+                    ErrorCode.UAHasBeenModified.getErrorCode(),
+                    "The "
+                            + ua.getUsername()
+                            + "'data is being modified simultaneously, please try again.");
         } catch (Exception e) {
+            logger.error("set ua failed, e: ", e);
             throw new JPAException("set ua failed: " + e.getMessage());
         }
+
         try {
 
             chainAccountTableJPA.saveAll(chainAccountTableBeanList);
 
+        } catch (ObjectOptimisticLockingFailureException e) {
+            logger.error("e: ", e);
+            throw new AccountManagerException(
+                    ErrorCode.UAHasBeenModified.getErrorCode(),
+                    "The "
+                            + ua.getUsername()
+                            + "'data is being modified simultaneously, please try again.");
         } catch (Exception e) {
-            logger.debug(
-                    "Set chain account failed, chain account is owned by other UA? "
-                            + e.getMessage());
+            logger.error("Set chain account failed, chain account is owned by other UA? ", e);
             throw new JPAException("Chain account is owned by other UA");
         }
 
@@ -125,12 +142,14 @@ public class UAManager {
                 throw new UndefinedErrorException("Invalid adminUA password, please check.");
             }
 
-        } catch (UsernameNotFoundException e) {
-            // not found
-            logger.info("AdminUA not found. Generate: {}", username);
-            admin = UniversalAccountBuilder.newUA(username, password);
-            setUA(admin);
-            logger.info("AdminUA generate success!");
+        } catch (AccountManagerException e) {
+            if (e.getErrorCode() == ErrorCode.UAAccountNotExist.getErrorCode()) {
+                // not found
+                logger.info("AdminUA not found. Generate: {}", username);
+                admin = UniversalAccountBuilder.newUA(username, password);
+                setUA(admin);
+                logger.info("AdminUA generate success!");
+            }
         }
     }
 

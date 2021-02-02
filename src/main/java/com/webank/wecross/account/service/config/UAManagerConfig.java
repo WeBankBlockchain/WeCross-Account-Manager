@@ -1,10 +1,16 @@
 package com.webank.wecross.account.service.config;
 
+import com.webank.wecross.account.service.RestRequestFilter;
 import com.webank.wecross.account.service.account.LoginSalt;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.authcode.AuthCodeManager;
 import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
+import com.webank.wecross.account.service.crypto.CryptoFactory;
+import com.webank.wecross.account.service.crypto.CryptoInterface;
+import com.webank.wecross.account.service.crypto.CryptoType;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
+import com.webank.wecross.account.service.db.SecKeyEntryConverter;
+import com.webank.wecross.account.service.db.TokenSecKeyEntryConverter;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ConfigurationException;
@@ -20,13 +26,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.annotation.Resource;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.util.StringUtils;
 
 @Configuration
 public class UAManagerConfig {
+
+    private static Logger logger = LoggerFactory.getLogger(UAManagerConfig.class);
+
     @Autowired UniversalAccountTableJPA universalAccountTableJPA;
 
     @Autowired ChainAccountTableJPA chainAccountTableJPA;
@@ -36,6 +48,17 @@ public class UAManagerConfig {
     @Bean
     public UAManager newUAManager() throws AccountManagerException {
         UAManager uaManager = new UAManager();
+
+        if (!StringUtils.isEmpty(applicationConfig.getDb().getEncryptKey())) {
+            CryptoInterface cryptoInterface =
+                    CryptoFactory.newCryptoInstance(CryptoType.AES_BASE64);
+            cryptoInterface.setKey(applicationConfig.getDb().getEncryptKey());
+            SecKeyEntryConverter.initCryptoInterface(cryptoInterface);
+            TokenSecKeyEntryConverter.initCryptoInterface(cryptoInterface);
+        } else {
+            logger.info("DB encryptKey not set.");
+        }
+
         uaManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         uaManager.setChainAccountTableJPA(chainAccountTableJPA);
         String username = applicationConfig.getAdmin().getUsername();
@@ -44,6 +67,7 @@ public class UAManagerConfig {
         uaManager.initAdminUA(username, confusedPassword);
 
         // uaManager.addMockUA();
+        logger.info("==> newUAManager: {}", uaManager);
 
         return uaManager;
     }
@@ -60,7 +84,18 @@ public class UAManagerConfig {
     }
 
     @Bean
-    public RSAKeyPairManager newRSAKeyPairManager()
+    public RestRequestFilter newRestRequestFilter()
+            throws InvalidKeySpecException, NoSuchAlgorithmException, ConfigurationException,
+                    IOException {
+        CryptoInterface cryptoInterface = CryptoFactory.newCryptoInstance(CryptoType.RSA_BASE64);
+        cryptoInterface.setKey(initRSAKeyPairManager());
+
+        RestRequestFilter restRequestFilter = new RestRequestFilter();
+        restRequestFilter.setCryptoInterface(cryptoInterface);
+        return restRequestFilter;
+    }
+
+    public RSAKeyPairManager initRSAKeyPairManager()
             throws NoSuchAlgorithmException, ConfigurationException, InvalidKeySpecException,
                     IOException {
         RSAKeyPairManager rsaKeyPairManager = new RSAKeyPairManager();
