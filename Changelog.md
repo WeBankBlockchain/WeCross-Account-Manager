@@ -1,3 +1,23 @@
+### v1.1.0
+
+(2020-02-02)
+
+**新增**
+
+* 添加`/auth/changePassword`接口
+
+**更新**
+
+* 升级`spring-boot-xxx`版本，详情参考`build.gradle`修改内容
+* 数据库字段加密:
+    * t_universal_accounts: sec、token_sec
+    * t_chain_accounts: sec
+* `SSL`证书格式修改为`RSA`
+
+**修复**
+
+* 修复一些JDK版本偶发`java.lang.NoClassDefFoundError: javax/xml/bind/JAXBException`的问题
+
 ### v1.0.1
 
 (2020-01-15)
