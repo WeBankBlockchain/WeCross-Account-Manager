@@ -1,8 +1,6 @@
 package com.webank.wecross.account.service.db;
 
-import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.crypto.CryptoInterface;
-import com.webank.wecross.account.service.exception.RequestParametersException;
 import java.nio.charset.StandardCharsets;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
@@ -21,24 +19,11 @@ public class SecKeyEntryConverter implements AttributeConverter<String, String> 
         logger.info("initCryptoInterface: {}", SecKeyEntryConverter.cryptoInterface);
     }
 
-    public boolean checkSec(String secContent) {
-        try {
-            ChainAccountBuilder.checkSecKey(secContent);
-            return true;
-        } catch (RequestParametersException e) {
-            return false;
-        }
-    }
-
     @SneakyThrows
     @Override
     public String convertToDatabaseColumn(String attribute) {
 
         if (cryptoInterface == null) {
-            return attribute;
-        }
-
-        if (!checkSec(attribute)) { // data already encrypt ??
             return attribute;
         }
 
@@ -52,10 +37,6 @@ public class SecKeyEntryConverter implements AttributeConverter<String, String> 
     public String convertToEntityAttribute(String dbData) {
 
         if (cryptoInterface == null) {
-            return dbData;
-        }
-
-        if (checkSec(dbData)) { // data not encrypt, old data ???
             return dbData;
         }
 
