@@ -11,7 +11,7 @@ public class CryptoFactory {
         } else if (cryptoType == CryptoType.AES) {
             return new CryptoAESImpl();
         } else if (cryptoType == CryptoType.AES_BASE64) {
-            return new CryptoAESBase64Impl();
+            return new CryptoAESBase64PrefixImpl();
         } else if (cryptoType == CryptoType.RSA) {
             return new CryptoRSAImpl();
         } else if (cryptoType == CryptoType.RSA_BASE64) {
