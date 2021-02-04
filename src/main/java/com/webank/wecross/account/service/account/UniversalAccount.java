@@ -1,7 +1,9 @@
 package com.webank.wecross.account.service.account;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
@@ -11,8 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import jdk.nashorn.internal.objects.annotations.Getter;
-import jdk.nashorn.internal.objects.annotations.Setter;
 import lombok.Builder;
 import lombok.Data;
 
@@ -44,7 +44,7 @@ public class UniversalAccount {
 
     private final Long version; // The state of ua, update by db automatically
 
-    @Setter
+    @JsonSetter("chainAccounts")
     public void setChainAccounts(List<ChainAccount> chainAccounts) {
         if (type2ChainAccounts == null) {
             type2ChainAccounts = new HashMap<>();
@@ -57,7 +57,7 @@ public class UniversalAccount {
         }
     }
 
-    @Getter
+    @JsonGetter("chainAccounts")
     public List<ChainAccount> getChainAccounts() {
         if (type2ChainAccounts == null) {
             type2ChainAccounts = new HashMap<>();
