@@ -43,13 +43,13 @@ run_wecross()
 {
     if [ "$(uname)" == "Darwin" ]; then
         # Mac
-        nohup java -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     elif [ "$(uname -s | grep MINGW | wc -l)" != "0" ]; then
         # Windows
-        nohup java -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     else
         # GNU/Linux
-        nohup java -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     fi
 }
 
@@ -165,4 +165,5 @@ main()
 }
 
 main
+
 
