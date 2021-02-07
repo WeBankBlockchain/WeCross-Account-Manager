@@ -9,14 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Converter
-public class SecKeyEntryConverter implements AttributeConverter<String, String> {
-    private static Logger logger = LoggerFactory.getLogger(SecKeyEntryConverter.class);
+public class TokenSecKeyEntryConverter implements AttributeConverter<String, String> {
+    private static Logger logger = LoggerFactory.getLogger(TokenSecKeyEntryConverter.class);
 
     private static CryptoInterface cryptoInterface = null;
 
     public static void initCryptoInterface(CryptoInterface cryptoInterface) {
-        SecKeyEntryConverter.cryptoInterface = cryptoInterface;
-        logger.info("initCryptoInterface: {}", SecKeyEntryConverter.cryptoInterface);
+        TokenSecKeyEntryConverter.cryptoInterface = cryptoInterface;
+        logger.info(
+                "[TokenSec] initCryptoInterface: {}", TokenSecKeyEntryConverter.cryptoInterface);
     }
 
     @SneakyThrows
@@ -45,9 +46,10 @@ public class SecKeyEntryConverter implements AttributeConverter<String, String> 
             String decodeString = new String(decode, StandardCharsets.UTF_8);
             return decodeString;
         } catch (Exception e) {
-            logger.error(
-                    "Failed to decrypt data, maybe the password is error, please check the [db:encryptKey] field configuration.");
-            throw new RuntimeException(e.getCause());
+            logger.warn(
+                    "Failed to decrypt token_sec data and the raw data will be return, please check the password configuration[db:encryptKey]");
+            logger.trace("e: ", e);
+            return dbData;
         }
     }
 }

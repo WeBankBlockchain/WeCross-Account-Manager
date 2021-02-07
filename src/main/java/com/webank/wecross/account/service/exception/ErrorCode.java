@@ -16,6 +16,8 @@ public enum ErrorCode {
     UserHasLogout(40012),
     ChainAccountTypeNotFound(40013),
     FlushDataException(40014),
+    ChainAccountHasBeenModified(40015),
+    UAHasBeenModified(40016),
     UndefinedError(40099);
 
     private int errorCode;

@@ -35,6 +35,7 @@ public class UniversalAccountTableBean {
 
     // secret
     @Column(nullable = false)
+    @Convert(converter = TokenSecKeyEntryConverter.class)
     private String tokenSec;
 
     @Column(nullable = false, columnDefinition = "text")
