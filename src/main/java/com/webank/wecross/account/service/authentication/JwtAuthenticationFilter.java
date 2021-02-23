@@ -1,6 +1,8 @@
 package com.webank.wecross.account.service.authentication;
 
 import com.webank.wecross.account.service.account.UAManager;
+import com.webank.wecross.account.service.exception.AccountManagerException;
+import com.webank.wecross.account.service.exception.ErrorCode;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -40,6 +42,9 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
             if (!jwtManager.hasLogout(token)) {
                 jwtManager.setTokenActive(token);
+            } else {
+                throw new AccountManagerException(
+                        ErrorCode.UserHasLogout.getErrorCode(), "User login has expired");
             }
 
             // OK!
