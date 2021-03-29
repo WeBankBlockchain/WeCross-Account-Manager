@@ -141,7 +141,7 @@ public class JwtManager {
         return tableBean.getLastActiveTimestamp();
     }
 
-    public void setLogoutToken(String tokenStr) throws JPAException {
+    public synchronized void setLogoutToken(String tokenStr) throws JPAException {
         LoginTokenTableBean tableBean = loginTokenTableJPA.findByToken(tokenStr);
         if (tableBean == null) {
             tableBean = new LoginTokenTableBean();
@@ -153,7 +153,7 @@ public class JwtManager {
         }
     }
 
-    public void setTokenActive(String tokenStr) throws JPAException {
+    public synchronized void setTokenActive(String tokenStr) throws JPAException {
         LoginTokenTableBean tableBean = loginTokenTableJPA.findByToken(tokenStr);
         if (tableBean == null) {
             tableBean = new LoginTokenTableBean();

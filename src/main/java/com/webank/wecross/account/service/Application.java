@@ -15,8 +15,10 @@ public class Application {
                     instanceof org.hibernate.exception.JDBCConnectionException) {
                 System.out.println("ERROR: Database connection exception, please check!");
             }
+            System.exit(-1);
         } catch (Exception e) {
             printException(e);
+            System.exit(-1);
         }
     }
 

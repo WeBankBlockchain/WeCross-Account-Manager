@@ -14,16 +14,12 @@ STATUS_STOPPED="Stopped"
 
 SECURIY_FILE='./.wecross.security'
 
-LOG_INFO()
-{
-    local content=${1}
-    echo -e "\033[32m${content}\033[0m"
+LOG_INFO() {
+    echo -e "\033[32m$@\033[0m"
 }
 
-LOG_ERROR()
-{
-    local content=${1}
-    echo -e "\033[31m${content}\033[0m"
+LOG_ERROR() {
+    echo -e "\033[31m$@\033[0m"
 }
 
 create_jvm_security()
@@ -32,6 +28,12 @@ create_jvm_security()
     echo "jdk.disabled.namedCurves = " > ${SECURIY_FILE}
     # LOG_INFO "create new file ${SECURIY_FILE}"
   fi
+}
+
+show_version() {
+  LOG_INFO "--------------------------------------------------------------------"
+  LOG_INFO "WeCross-Account-Manager version: [" $(ls ${APPS_FOLDER} |awk '{gsub(/.jar$/,""); print}') "]"
+  LOG_INFO "--------------------------------------------------------------------"
 }
 
 wecross_pid()
@@ -101,6 +103,7 @@ before_start()
 start()
 {
     rm -f start.out
+    show_version
     create_jvm_security
     run_wecross
     echo -e "\033[32mWeCross-Account-Manager booting up ..\033[0m\c"
@@ -137,7 +140,7 @@ after_start()
 
     case ${status} in
         ${STATUS_STARTING})
-            kill $(wecross_pid)
+            kill -9 $(wecross_pid)
             LOG_ERROR "Exceed waiting time. Killed. Please try to start WeCross-Account-Manager again"
             tail_log
             exit 1
