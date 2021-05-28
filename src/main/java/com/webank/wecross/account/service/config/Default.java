@@ -6,4 +6,5 @@ public class Default {
     public static final String BCOS_STUB_TYPE = "BCOS2.0";
     public static final String BCOS_GM_STUB_TYPE = "GM_BCOS2.0";
     public static final String FABRIC_STUB_TYPE = "Fabric1.4";
+    public static final String FABRIC_STUB_TYPE2 = "Fabric2.0";
 }
