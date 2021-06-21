@@ -28,11 +28,14 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
 import com.webank.wecross.account.service.config.ApplicationConfig;
+import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
+import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
 import com.webank.wecross.account.service.crypto.CryptoRSABase64Impl;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
 import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
+import com.webank.wecross.account.service.utils.Path;
 import java.util.Base64;
 import java.util.UUID;
 import javax.annotation.Resource;
@@ -677,6 +680,59 @@ public class ServiceController {
             return restResponse;
         }
 
+        return restResponse;
+    }
+
+    @RequestMapping(
+            value = "/auth/setUniversalAccountAccessControlList",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object setUniversalAccountACL(@RequestBody String params) {
+        RestResponse restResponse;
+
+        try {
+
+            SetUniversalAccountACLRequest setUniversalAccountACLRequest =
+                    (SetUniversalAccountACLRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/setUniversalAccountAccessControlList",
+                                            params,
+                                            SetUniversalAccountACLRequest.class);
+
+            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+
+            String[] allowChainPaths = setUniversalAccountACLRequest.getAllowChainPaths();
+            for (String allowChainPath : allowChainPaths) {
+                Path path = Path.decode(allowChainPath);
+                if (!path.isChainPath()) {
+                    throw new AccountManagerException(
+                            ErrorCode.InvalidPathFormat.getErrorCode(),
+                            "Invalid chain path format(eg: payment.chain): " + allowChainPath);
+                }
+            }
+
+            ua.setAllowChainPaths(allowChainPaths);
+            serviceContext.getUaManager().setUA(ua); // update to db
+
+            SetUniversalAccountACLResponse setUniversalAccountACLResponse =
+                    SetUniversalAccountACLResponse.builder()
+                            .errorCode(0)
+                            .message("success")
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setUniversalAccountACLResponse);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            SetUniversalAccountACLResponse setUniversalAccountACLResponse =
+                    SetUniversalAccountACLResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setUniversalAccountACLResponse);
+        }
         return restResponse;
     }
 }
