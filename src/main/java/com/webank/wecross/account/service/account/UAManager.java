@@ -178,6 +178,10 @@ public class UAManager {
         }
     }
 
+    public String[] getAccountNames() {
+        return universalAccountTableJPA.findUsernames().toArray(new String[0]);
+    }
+
     public boolean isAdminUA(UniversalAccount universalAccount) {
         return universalAccount.getUsername().equals(adminName);
     }
