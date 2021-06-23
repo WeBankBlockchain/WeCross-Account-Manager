@@ -10,7 +10,6 @@ import com.webank.wecross.account.service.crypto.CryptoInterface;
 import com.webank.wecross.account.service.crypto.CryptoType;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.SecKeyEntryConverter;
-import com.webank.wecross.account.service.db.TokenSecKeyEntryConverter;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ConfigurationException;
@@ -54,7 +53,6 @@ public class UAManagerConfig {
                     CryptoFactory.newCryptoInstance(CryptoType.AES_BASE64);
             cryptoInterface.setKey(applicationConfig.getDb().getEncryptKey());
             SecKeyEntryConverter.initCryptoInterface(cryptoInterface);
-            TokenSecKeyEntryConverter.initCryptoInterface(cryptoInterface);
         } else {
             logger.info("DB encryptKey not set.");
         }
