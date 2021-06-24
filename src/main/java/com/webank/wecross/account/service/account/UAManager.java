@@ -178,8 +178,19 @@ public class UAManager {
         }
     }
 
-    public String[] getAccountNames() {
-        return universalAccountTableJPA.findUsernames().toArray(new String[0]);
+    public AccountAccessControlList getAccessControlListByName(String username) {
+        UniversalAccountACLTableBean bean = universalAccountACLTableJPA.findByUsername(username);
+        return AccountAccessControlList.buildFromTableBean(bean);
+    }
+
+    public AccountAccessControlList[] getAllAccessControlList() {
+        List<UniversalAccountACLTableBean> beans = universalAccountACLTableJPA.findAll();
+        List<AccountAccessControlList> lists = new LinkedList<>();
+        for (UniversalAccountACLTableBean bean : beans) {
+            lists.add(AccountAccessControlList.buildFromTableBean(bean));
+        }
+
+        return lists.toArray(new AccountAccessControlList[0]);
     }
 
     public boolean isAdminUA(UniversalAccount universalAccount) {

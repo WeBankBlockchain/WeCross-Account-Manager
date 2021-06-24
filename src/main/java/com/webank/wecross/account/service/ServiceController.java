@@ -1,5 +1,6 @@
 package com.webank.wecross.account.service;
 
+import com.webank.wecross.account.service.account.AccountAccessControlList;
 import com.webank.wecross.account.service.account.ChainAccount;
 import com.webank.wecross.account.service.account.ChainAccountBuilder;
 import com.webank.wecross.account.service.account.LoginSalt;
@@ -685,104 +686,27 @@ public class ServiceController {
     }
 
     @RequestMapping(
-            value = "/auth/accessControlList",
-            method = RequestMethod.POST,
-            produces = "application/json")
-    private Object setUniversalAccountACL(@RequestBody String params) {
-        RestResponse restResponse;
-        try {
-
-            SetUniversalAccountACLRequest setUniversalAccountACLRequest =
-                    (SetUniversalAccountACLRequest)
-                            serviceContext
-                                    .getRestRequestFilter()
-                                    .fetchRequestObject(
-                                            "/auth/setUniversalAccountAccessControlList",
-                                            params,
-                                            SetUniversalAccountACLRequest.class);
-
-            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
-
-            String[] allowChainPaths = setUniversalAccountACLRequest.getAllowChainPaths();
-            for (String allowChainPath : allowChainPaths) {
-                Path path = Path.decode(allowChainPath);
-                if (!path.isChainPath()) {
-                    throw new AccountManagerException(
-                            ErrorCode.InvalidPathFormat.getErrorCode(),
-                            "Invalid chain path format(eg: payment.chain): " + allowChainPath);
-                }
-            }
-
-            ua.setAllowChainPaths(allowChainPaths);
-            serviceContext.getUaManager().setUA(ua); // update to db
-
-            SetUniversalAccountACLResponse setUniversalAccountACLResponse =
-                    SetUniversalAccountACLResponse.builder()
-                            .errorCode(0)
-                            .message("success")
-                            .build();
-            restResponse = RestResponse.newSuccess();
-            restResponse.setData(setUniversalAccountACLResponse);
-        } catch (Exception e) {
-            logger.error("e: ", e);
-            SetUniversalAccountACLResponse setUniversalAccountACLResponse =
-                    SetUniversalAccountACLResponse.builder()
-                            .errorCode(1)
-                            .message(e.getMessage())
-                            .build();
-            restResponse = RestResponse.newSuccess();
-            restResponse.setData(setUniversalAccountACLResponse);
-        }
-        return restResponse;
-    }
-
-    @RequestMapping(
-            value = "/auth/admin/accountNames",
-            method = RequestMethod.GET,
-            produces = "application/json")
-    private Object getAccountNames() {
-        RestResponse restResponse;
-
-        try {
-            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
-
-            // only admin can operate
-            if (!ua.isAdmin()) {
-                throw new Exception("Permission denied");
-            }
-
-            String[] data = serviceContext.getUaManager().getAccountNames();
-            restResponse = RestResponse.newSuccess();
-            restResponse.setData(data);
-
-        } catch (Exception e) {
-            logger.error("e: ", e);
-            restResponse = RestResponse.newFailed(e.getMessage());
-            restResponse.setData(null);
-        }
-        return restResponse;
-    }
-
-    @RequestMapping(
             value = "/auth/admin/accessControlList",
             method = RequestMethod.GET,
             produces = "application/json")
-    private Object getAccountNames(@RequestParam String username) {
+    private Object getAccountNames(@RequestParam(required = false) String username) {
         RestResponse restResponse;
 
         try {
-            if (username == null || username.length() == 0) {
-                throw new Exception("username=xxx is not given");
-            }
-
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
             // only admin can operate
             if (!ua.isAdmin()) {
                 throw new Exception("Permission denied");
             }
 
-            UniversalAccount userUA = serviceContext.getUaManager().getUA(username);
-            String[] data = userUA.getAllowChainPaths();
+            AccountAccessControlList[] data = null;
+            if (username == null) {
+                data = serviceContext.getUaManager().getAllAccessControlList();
+            } else {
+                data = new AccountAccessControlList[1];
+                data[0] = serviceContext.getUaManager().getAccessControlListByName(username);
+            }
+
             restResponse = RestResponse.newSuccess();
             restResponse.setData(data);
 
