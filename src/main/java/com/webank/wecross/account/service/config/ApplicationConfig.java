@@ -270,7 +270,7 @@ public class ApplicationConfig {
         }
     }
 
-    class Admin {
+    public class Admin {
         private String username;
         private String password;
 
