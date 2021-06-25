@@ -241,6 +241,7 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+        private String[] allowChainPaths;
         private Long version;
 
         @JsonProperty("isAdmin")
@@ -258,6 +259,7 @@ public class UniversalAccount {
         details.setSecKey(secKey);
         details.setRole(role);
         details.setAdmin(isAdmin);
+        details.setAllowChainPaths(allowChainPaths);
         details.setVersion(version);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
