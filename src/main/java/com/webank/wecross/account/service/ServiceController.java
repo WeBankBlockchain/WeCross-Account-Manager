@@ -2,6 +2,7 @@ package com.webank.wecross.account.service;
 
 import com.webank.wecross.account.service.account.ChainAccount;
 import com.webank.wecross.account.service.account.ChainAccountBuilder;
+import com.webank.wecross.account.service.account.LoginSalt;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
@@ -26,6 +27,7 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
+import com.webank.wecross.account.service.config.ApplicationConfig;
 import com.webank.wecross.account.service.crypto.CryptoRSABase64Impl;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
@@ -34,6 +36,7 @@ import com.webank.wecross.account.service.utils.PassWordUtility;
 import java.util.Base64;
 import java.util.UUID;
 import javax.annotation.Resource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +51,7 @@ public class ServiceController {
     public ServiceController() {}
 
     @Resource ServiceContext serviceContext;
+    @Resource ApplicationConfig applicationConfig;
 
     @RequestMapping("/test")
     private Object test() {
@@ -197,6 +201,22 @@ public class ServiceController {
             JwtManager jwtManager = serviceContext.getJwtManager();
             UAManager uaManager = serviceContext.getUaManager();
             String username = loginRequest.getUsername();
+
+            UniversalAccount ua = null;
+            try {
+                ua = uaManager.getUA(username);
+            } catch (AccountManagerException accountManagerException) {
+                if (accountManagerException.getErrorCode()
+                        == ErrorCode.UAAccountNotExist.getErrorCode()) {
+                    logger.info("routerLogin username: {} not found and will create it", username);
+                    String password = applicationConfig.getAdmin().getPassword();
+                    String confusedPassword = DigestUtils.sha256Hex(LoginSalt.LoginSalt + password);
+                    ua = UniversalAccountBuilder.newUA(username, confusedPassword);
+                    uaManager.setUA(ua);
+                } else {
+                    throw accountManagerException;
+                }
+            }
 
             JwtToken jwtToken = jwtManager.newToken(username);
             jwtManager.setTokenActive(jwtToken); // active it during login
