@@ -183,10 +183,14 @@ public class UAManager {
         return AccountAccessControlList.buildFromTableBean(bean);
     }
 
-    public AccountAccessControlList[] getAllAccessControlList() {
+    public AccountAccessControlList[] getAllAccessControlList(boolean ignoreAdmin) {
         List<UniversalAccountACLTableBean> beans = universalAccountACLTableJPA.findAll();
         List<AccountAccessControlList> lists = new LinkedList<>();
         for (UniversalAccountACLTableBean bean : beans) {
+            if (ignoreAdmin && adminName.equals(bean.getUsername())) {
+                continue;
+            }
+
             lists.add(AccountAccessControlList.buildFromTableBean(bean));
         }
 

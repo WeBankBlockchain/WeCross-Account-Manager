@@ -701,7 +701,7 @@ public class ServiceController {
 
             AccountAccessControlList[] data = null;
             if (username == null) {
-                data = serviceContext.getUaManager().getAllAccessControlList();
+                data = serviceContext.getUaManager().getAllAccessControlList(true);
             } else {
                 data = new AccountAccessControlList[1];
                 data[0] = serviceContext.getUaManager().getAccessControlListByName(username);
