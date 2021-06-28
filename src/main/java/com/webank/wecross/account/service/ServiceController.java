@@ -209,7 +209,7 @@ public class ServiceController {
                 if (accountManagerException.getErrorCode()
                         == ErrorCode.UAAccountNotExist.getErrorCode()) {
                     logger.info("routerLogin username: {} not found and will create it", username);
-                    String password = applicationConfig.getAdmin().getPassword();
+                    String password = applicationConfig.getExt().getRouterLoginAccountPassword();
                     String confusedPassword = DigestUtils.sha256Hex(LoginSalt.LoginSalt + password);
                     ua = UniversalAccountBuilder.newUA(username, confusedPassword);
                     uaManager.setUA(ua);
