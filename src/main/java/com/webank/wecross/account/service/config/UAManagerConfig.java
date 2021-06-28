@@ -11,6 +11,7 @@ import com.webank.wecross.account.service.crypto.CryptoType;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
 import com.webank.wecross.account.service.db.SecKeyEntryConverter;
 import com.webank.wecross.account.service.db.TokenSecKeyEntryConverter;
+import com.webank.wecross.account.service.db.UniversalAccountACLTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ConfigurationException;
@@ -43,6 +44,8 @@ public class UAManagerConfig {
 
     @Autowired ChainAccountTableJPA chainAccountTableJPA;
 
+    @Autowired UniversalAccountACLTableJPA universalAccountACLTableJPA;
+
     @Resource ApplicationConfig applicationConfig;
 
     @Bean
@@ -61,6 +64,7 @@ public class UAManagerConfig {
 
         uaManager.setUniversalAccountTableJPA(universalAccountTableJPA);
         uaManager.setChainAccountTableJPA(chainAccountTableJPA);
+        uaManager.setUniversalAccountACLTableJPA(universalAccountACLTableJPA);
         String username = applicationConfig.getAdmin().getUsername();
         String password = applicationConfig.getAdmin().getPassword();
         String confusedPassword = DigestUtils.sha256Hex(LoginSalt.LoginSalt + password);

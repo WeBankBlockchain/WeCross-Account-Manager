@@ -1,6 +1,7 @@
 package com.webank.wecross.account.service.account;
 
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
+import com.webank.wecross.account.service.db.UniversalAccountACLTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
@@ -18,13 +19,21 @@ public class UniversalAccountBuilder {
     private static Logger logger = LoggerFactory.getLogger(UniversalAccountBuilder.class);
 
     public static UniversalAccount build(
-            UniversalAccountTableBean tableBean, List<ChainAccountTableBean> chainAccountTableBeans)
+            UniversalAccountTableBean tableBean,
+            List<ChainAccountTableBean> chainAccountTableBeans,
+            UniversalAccountACLTableBean universalAccountACLTableBean)
             throws AccountManagerException {
         List<ChainAccount> chainAccounts = new LinkedList<>();
         for (ChainAccountTableBean chainAccountTableBean : chainAccountTableBeans) {
             ChainAccount chainAccount =
                     ChainAccountBuilder.buildFromTableBean(chainAccountTableBean);
             chainAccounts.add(chainAccount);
+        }
+
+        String[] allowChainPaths = null;
+        if (universalAccountACLTableBean != null) {
+            allowChainPaths =
+                    universalAccountACLTableBean.getAllowChainPaths().toArray(new String[0]);
         }
 
         UniversalAccount ua =
@@ -40,6 +49,8 @@ public class UniversalAccountBuilder {
                         .secKey(tableBean.getSec())
                         .latestKeyID(tableBean.getLatestKeyID())
                         .version(tableBean.getVersion())
+                        .allowChainPaths(allowChainPaths)
+                        .aclId(universalAccountACLTableBean.getId())
                         .build();
         ua.setChainAccounts(chainAccounts);
         return ua;

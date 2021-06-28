@@ -18,6 +18,7 @@ public enum ErrorCode {
     FlushDataException(40014),
     ChainAccountHasBeenModified(40015),
     UAHasBeenModified(40016),
+    InvalidPathFormat(40017),
     UndefinedError(40099);
 
     private int errorCode;
