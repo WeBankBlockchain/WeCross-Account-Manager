@@ -28,9 +28,9 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
-import com.webank.wecross.account.service.config.ApplicationConfig;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
+import com.webank.wecross.account.service.config.ApplicationConfig;
 import com.webank.wecross.account.service.crypto.CryptoRSABase64Impl;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
