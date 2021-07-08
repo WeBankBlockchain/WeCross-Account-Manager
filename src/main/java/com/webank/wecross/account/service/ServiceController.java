@@ -325,7 +325,7 @@ public class ServiceController {
     }
 
     @RequestMapping(value = "/auth/pub", method = RequestMethod.POST)
-    private Object getPubPostWay(@RequestBody String params) {
+    private Object getPubPostWay() {
         return getPub();
     }
 
@@ -399,7 +399,7 @@ public class ServiceController {
     }
 
     @RequestMapping(value = "/auth/getUAVersion", produces = "application/json")
-    private Object getUAVersion(@RequestBody String params) {
+    private Object getUAVersion() {
         // if goes here, the user has login and token has not expired
 
         Long uaVersion = serviceContext.getUaManager().getCurrentLoginUA().getVersion();
@@ -410,7 +410,7 @@ public class ServiceController {
     }
 
     @RequestMapping(value = "/auth/logout", produces = "application/json")
-    private Object logout(@RequestBody String params) {
+    private Object logout() {
 
         LogoutResponse logoutResponse;
 
@@ -628,7 +628,7 @@ public class ServiceController {
     }
 
     @RequestMapping(value = "/auth/listAccount", produces = "application/json")
-    private Object listAccount(@RequestBody String params) {
+    private Object listAccount() {
         UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
         RestResponse response = RestResponse.newSuccess();
         response.setData(ua);
