@@ -31,7 +31,8 @@ public class UniversalAccountBuilder {
         }
 
         String[] allowChainPaths = null;
-        if (universalAccountACLTableBean != null) {
+        if (universalAccountACLTableBean != null
+                && universalAccountACLTableBean.getAllowChainPaths() != null) {
             allowChainPaths =
                     universalAccountACLTableBean.getAllowChainPaths().toArray(new String[0]);
         }
