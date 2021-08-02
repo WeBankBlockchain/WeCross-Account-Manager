@@ -22,9 +22,7 @@ repositories {
 
     jcenter()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url 'https://dl.bintray.com/ethereum/maven/' }
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }
+    maven { url 'https://maven.aliyun.com/repository/public' }
 }
 
 sourceCompatibility = 1.8
@@ -37,9 +35,9 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
     compile 'javax.xml.bind:jaxb-api:2.3.1'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
-    compile 'org.springframework.boot:spring-boot-starter-web:2.3.9.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-security:2.3.9.RELEASE'
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.3.9.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-web:2.4.9'
+    compile 'org.springframework.boot:spring-boot-starter-security:2.4.9'
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.4.9'
     compile 'mysql:mysql-connector-java:8.0.21'
     compile 'com.h2database:h2:1.4.196'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.3'
