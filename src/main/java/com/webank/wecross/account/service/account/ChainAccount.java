@@ -76,6 +76,10 @@ public class ChainAccount {
 
     @JsonIgnore
     public String getIdentityDetail() {
+        return getIdentityDetail(identity);
+    }
+
+    public static String getIdentityDetail(String identity) {
         String purePub = identity.trim().replace("-", "").replace("\n", "").replace("\r", "");
         return SM3.hash(purePub);
     }
