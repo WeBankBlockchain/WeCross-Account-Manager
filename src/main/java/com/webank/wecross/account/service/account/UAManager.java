@@ -129,10 +129,16 @@ public class UAManager {
 
     public UniversalAccount getUAByChainAccount(String chainAccountIdentity)
             throws AccountManagerException {
+        String identityDetail = ChainAccount.getIdentityDetail(chainAccountIdentity);
+
         List<ChainAccountTableBean> chainAccountTableBeanList =
-                chainAccountTableJPA.findByIdentityOrderByKeyIDDesc(chainAccountIdentity);
-        if (chainAccountTableBeanList == null) {
-            throw new UsernameNotFoundException("Chain account not found: " + chainAccountIdentity);
+                chainAccountTableJPA.findByIdentityDetailOrderByKeyIDDesc(identityDetail);
+        if (chainAccountTableBeanList == null || chainAccountTableBeanList.isEmpty()) {
+            throw new UsernameNotFoundException(
+                    "Chain account not found. detail "
+                            + identityDetail
+                            + " identity: "
+                            + chainAccountIdentity);
         }
 
         // check username are the same
