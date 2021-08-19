@@ -87,6 +87,11 @@ public class ChainAccountBuilder {
                 checkMSPID(request.getExt());
                 account.setIdentity(request.getPubKey());
                 break;
+            case Default.FABRIC_STUB_TYPE2:
+                checkCertificatePem(request.getPubKey());
+                checkMSPID(request.getExt());
+                account.setIdentity(request.getPubKey());
+                break;
             default:
                 logger.error("request unknown ChainAccount type: {}", type);
                 throw new RequestParametersException("Unknown ChainAccount type: " + type);

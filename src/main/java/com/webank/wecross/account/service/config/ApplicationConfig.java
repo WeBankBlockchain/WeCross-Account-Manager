@@ -270,7 +270,7 @@ public class ApplicationConfig {
         }
     }
 
-    class Admin {
+    public class Admin {
         private String username;
         private String password;
 
@@ -462,12 +462,16 @@ public class ApplicationConfig {
     }
 
     /** Ext configurations */
-    class Ext {
+    public class Ext {
 
         private boolean allowImageAuthCodeEmpty = true;
+        private String routerLoginAccountPassword;
 
         public Ext(Toml toml) {
             this.allowImageAuthCodeEmpty = parseBoolean(toml, "ext.allowImageAuthCodeEmpty", true);
+            // default 12345678
+            this.routerLoginAccountPassword =
+                    parseString(toml, "ext.routerLoginAccountPassword", "12345678");
         }
 
         public boolean isAllowImageAuthCodeEmpty() {
@@ -478,9 +482,23 @@ public class ApplicationConfig {
             this.allowImageAuthCodeEmpty = allowImageAuthCodeEmpty;
         }
 
+        public String getRouterLoginAccountPassword() {
+            return routerLoginAccountPassword;
+        }
+
+        public void setRouterLoginAccountPassword(String routerLoginAccountPassword) {
+            this.routerLoginAccountPassword = routerLoginAccountPassword;
+        }
+
         @Override
         public String toString() {
-            return "Ext{" + "allowImageAuthCodeEmpty=" + allowImageAuthCodeEmpty + '}';
+            return "Ext{"
+                    + "allowImageAuthCodeEmpty="
+                    + allowImageAuthCodeEmpty
+                    + ", routerLoginAccountPassword='"
+                    + routerLoginAccountPassword
+                    + '\''
+                    + '}';
         }
     }
 
@@ -533,14 +551,13 @@ public class ApplicationConfig {
         return res;
     }
 
-    /*
     private static String parseString(Toml toml, String key, String defaultReturn) {
         try {
             return parseString(toml, key);
         } catch (ConfigurationException e) {
             return defaultReturn;
         }
-    }*/
+    }
 
     private static String parseString(Toml toml, String key) throws ConfigurationException {
         String res = toml.getString(key);

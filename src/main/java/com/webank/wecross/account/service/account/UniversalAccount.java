@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.webank.wecross.account.service.db.UniversalAccountACLTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.exception.AccountManagerException;
 import com.webank.wecross.account.service.exception.ErrorCode;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -25,6 +27,9 @@ public class UniversalAccount {
     private String uaID;
     private String pubKey;
     private boolean isAdmin;
+
+    private String[] allowChainPaths;
+    @JsonIgnore private Integer aclId;
 
     @JsonIgnore private String password;
 
@@ -236,6 +241,7 @@ public class UniversalAccount {
         private String password;
         private String secKey;
         private String role;
+        private String[] allowChainPaths;
         private Long version;
 
         @JsonProperty("isAdmin")
@@ -253,6 +259,7 @@ public class UniversalAccount {
         details.setSecKey(secKey);
         details.setRole(role);
         details.setAdmin(isAdmin);
+        details.setAllowChainPaths(allowChainPaths);
         details.setVersion(version);
 
         Map<String, Map<Integer, ChainAccount.Details>> type2ChainAccountDetails = new HashMap<>();
@@ -283,6 +290,20 @@ public class UniversalAccount {
         tableBean.setRole(role);
         tableBean.setLatestKeyID(latestKeyID);
         tableBean.setVersion(version);
+        return tableBean;
+    }
+
+    public UniversalAccountACLTableBean toACLBean() {
+        List<String> paths = null;
+        if (allowChainPaths != null) {
+            paths = Arrays.asList(allowChainPaths);
+        }
+
+        UniversalAccountACLTableBean tableBean = new UniversalAccountACLTableBean();
+        tableBean.setId(aclId);
+        tableBean.setUsername(username);
+        tableBean.setAllowChainPaths(paths);
+
         return tableBean;
     }
 }

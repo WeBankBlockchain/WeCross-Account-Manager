@@ -2,6 +2,8 @@ package com.webank.wecross.account.service.account;
 
 import com.webank.wecross.account.service.db.ChainAccountTableBean;
 import com.webank.wecross.account.service.db.ChainAccountTableJPA;
+import com.webank.wecross.account.service.db.UniversalAccountACLTableBean;
+import com.webank.wecross.account.service.db.UniversalAccountACLTableJPA;
 import com.webank.wecross.account.service.db.UniversalAccountTableBean;
 import com.webank.wecross.account.service.db.UniversalAccountTableJPA;
 import com.webank.wecross.account.service.exception.AccountManagerException;
@@ -22,6 +24,7 @@ public class UAManager {
 
     private UniversalAccountTableJPA universalAccountTableJPA;
     private ChainAccountTableJPA chainAccountTableJPA;
+    private UniversalAccountACLTableJPA universalAccountACLTableJPA;
     private String adminName;
 
     private ThreadLocal<UniversalAccount> currentLoginUA = new ThreadLocal<>();
@@ -37,13 +40,19 @@ public class UAManager {
                 universalAccountTableJPA.findByUsername(username);
         List<ChainAccountTableBean> chainAccountTableBeanList =
                 chainAccountTableJPA.findByUsernameOrderByKeyIDDesc(username);
+        UniversalAccountACLTableBean universalAccountACLTableBean =
+                universalAccountACLTableJPA.findByUsername(username);
+
         if (universalAccountTableBean == null) {
             throw new AccountManagerException(
                     ErrorCode.UAAccountNotExist.getErrorCode(), "User not found: " + username);
         }
 
         UniversalAccount ua =
-                UniversalAccountBuilder.build(universalAccountTableBean, chainAccountTableBeanList);
+                UniversalAccountBuilder.build(
+                        universalAccountTableBean,
+                        chainAccountTableBeanList,
+                        universalAccountACLTableBean);
         ua.setAdmin(username.equals(adminName));
         return ua;
     }
@@ -52,6 +61,7 @@ public class UAManager {
         UniversalAccountTableBean universalAccountTableBean = ua.toTableBean();
         List<ChainAccount> chainAccounts = ua.getChainAccounts();
         List<ChainAccountTableBean> chainAccountTableBeanList = new LinkedList<>();
+        UniversalAccountACLTableBean universalAccountACLTableBean = ua.toACLBean();
 
         for (ChainAccount chainAccount : chainAccounts) {
             ChainAccountTableBean chainAccountTableBean = chainAccount.toTableBean();
@@ -90,6 +100,21 @@ public class UAManager {
         }
 
         try {
+            universalAccountACLTableBean.setUpdateTimestamp(System.currentTimeMillis());
+            universalAccountACLTableJPA.saveAndFlush(universalAccountACLTableBean);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            logger.error("e: ", e);
+            throw new AccountManagerException(
+                    ErrorCode.UAHasBeenModified.getErrorCode(),
+                    "The "
+                            + ua.getUsername()
+                            + "'data is being modified simultaneously, please try again.");
+        } catch (Exception e) {
+            logger.error("set ua access control list failed, e: ", e);
+            throw new JPAException("set ua access control list failed: " + e.getMessage());
+        }
+
+        try {
             while (!ua.getChainAccounts2Remove().isEmpty()) {
                 ChainAccount ca2Remove = ua.getChainAccounts2Remove().peek();
                 chainAccountTableJPA.deleteById(ca2Remove.getId());
@@ -104,10 +129,16 @@ public class UAManager {
 
     public UniversalAccount getUAByChainAccount(String chainAccountIdentity)
             throws AccountManagerException {
+        String identityDetail = ChainAccount.getIdentityDetail(chainAccountIdentity);
+
         List<ChainAccountTableBean> chainAccountTableBeanList =
-                chainAccountTableJPA.findByIdentityOrderByKeyIDDesc(chainAccountIdentity);
-        if (chainAccountTableBeanList == null) {
-            throw new UsernameNotFoundException("Chain account not found: " + chainAccountIdentity);
+                chainAccountTableJPA.findByIdentityDetailOrderByKeyIDDesc(identityDetail);
+        if (chainAccountTableBeanList == null || chainAccountTableBeanList.isEmpty()) {
+            throw new UsernameNotFoundException(
+                    "Chain account not found. detail "
+                            + identityDetail
+                            + " identity: "
+                            + chainAccountIdentity);
         }
 
         // check username are the same
@@ -153,6 +184,25 @@ public class UAManager {
         }
     }
 
+    public AccountAccessControlList getAccessControlListByName(String username) {
+        UniversalAccountACLTableBean bean = universalAccountACLTableJPA.findByUsername(username);
+        return AccountAccessControlList.buildFromTableBean(bean);
+    }
+
+    public AccountAccessControlList[] getAllAccessControlList(boolean ignoreAdmin) {
+        List<UniversalAccountACLTableBean> beans = universalAccountACLTableJPA.findAll();
+        List<AccountAccessControlList> lists = new LinkedList<>();
+        for (UniversalAccountACLTableBean bean : beans) {
+            if (ignoreAdmin && adminName.equals(bean.getUsername())) {
+                continue;
+            }
+
+            lists.add(AccountAccessControlList.buildFromTableBean(bean));
+        }
+
+        return lists.toArray(new AccountAccessControlList[0]);
+    }
+
     public boolean isAdminUA(UniversalAccount universalAccount) {
         return universalAccount.getUsername().equals(adminName);
     }
@@ -188,5 +238,10 @@ public class UAManager {
 
     public void setAdminName(String adminName) {
         this.adminName = adminName;
+    }
+
+    public void setUniversalAccountACLTableJPA(
+            UniversalAccountACLTableJPA universalAccountACLTableJPA) {
+        this.universalAccountACLTableJPA = universalAccountACLTableJPA;
     }
 }
