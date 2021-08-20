@@ -1,6 +1,7 @@
 #!/bin/bash
 dirpath="$(cd "$(dirname "$0")" && pwd)"
 cd ${dirpath}
+export LANG='zh_CN.utf8'
 
 APP_NAME=com.webank.wecross.account.service.Application
 
@@ -45,13 +46,13 @@ run_wecross()
 {
     if [ "$(uname)" == "Darwin" ]; then
         # Mac
-        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Dfile.encoding=UTF-8 -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     elif [ "$(uname -s | grep MINGW | wc -l)" != "0" ]; then
         # Windows
-        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Dfile.encoding=UTF-8 -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${WINDS_CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     else
         # GNU/Linux
-        nohup java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
+        nohup java -Dfile.encoding=UTF-8 -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative="false" -Djdk.tls.namedGroups="secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448,ffdhe2048,ffdhe3072,ffdhe4096,ffdhe6144,ffdhe8192" -cp ${CLASS_PATH} ${APP_NAME} >start.out 2>&1 &
     fi
 }
 
