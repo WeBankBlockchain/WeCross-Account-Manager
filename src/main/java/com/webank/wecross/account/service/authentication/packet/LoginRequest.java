@@ -8,4 +8,5 @@ public class LoginRequest {
     private String password;
     private String randomToken;
     private String authCode;
+    private String mailCode;
 }

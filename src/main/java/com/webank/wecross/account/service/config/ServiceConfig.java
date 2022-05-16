@@ -41,6 +41,8 @@ public class ServiceConfig extends WebSecurityConfigurerAdapter {
                         "/auth/register",
                         "/auth/pub",
                         "/auth/routerLogin",
+                        "/auth/need-mail-auth",
+                        "/auth/mail-code",
                         "/auth/authCode"); // TODO: use one configure in cors()
     }
 

@@ -5,6 +5,7 @@ import com.webank.wecross.account.service.exception.ConfigurationException;
 import com.webank.wecross.account.service.utils.FileUtility;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,7 @@ public class ApplicationConfig {
     private Admin admin;
     private Encrypt encrypt;
     private Auth auth;
+    private Mail mail;
     private DB db;
     private Ext ext;
 
@@ -63,6 +65,7 @@ public class ApplicationConfig {
         this.service = new Service(toml);
         this.admin = new Admin(toml);
         this.auth = new Auth(toml);
+        this.mail = new Mail(toml);
         this.db = new DB(toml);
         this.encrypt = new Encrypt(toml);
         this.ext = new Ext(toml);
@@ -116,6 +119,14 @@ public class ApplicationConfig {
         this.ext = ext;
     }
 
+    public Mail getMail() {
+        return mail;
+    }
+
+    public void setMail(Mail mail) {
+        this.mail = mail;
+    }
+
     @Override
     public String toString() {
         return "ApplicationConfig{"
@@ -127,6 +138,8 @@ public class ApplicationConfig {
                 + encrypt
                 + ", auth="
                 + auth
+                + ", mail="
+                + mail
                 + ", db="
                 + db
                 + ", ext="
@@ -326,12 +339,13 @@ public class ApplicationConfig {
         private String name;
         private long expires;
         private long noActiveExpires;
+        private boolean needMailAuth;
 
         Auth(Toml toml) throws ConfigurationException {
             this.name = parseString(toml, "auth.name");
             this.expires = parseULong(toml, "auth.expires", 18000); // default 5h
             this.noActiveExpires = parseULong(toml, "auth.noActiveExpires", 600); // default 600s
-
+            this.needMailAuth = parseBoolean(toml, "auth.needMailAuth", false);
             if (this.name.length() >= 256) {
                 throw new ConfigurationException(
                         "auth.name(length:" + this.name.length() + ") must smaller than 256");
@@ -377,17 +391,41 @@ public class ApplicationConfig {
             this.noActiveExpires = noActiveExpires;
         }
 
+        public boolean isNeedMailAuth() {
+            return needMailAuth;
+        }
+
+        public void setNeedMailAuth(boolean needMailAuth) {
+            this.needMailAuth = needMailAuth;
+        }
+
         @Override
         public String toString() {
             return "Auth{"
-                    + "username='"
+                    + "name='"
                     + name
                     + '\''
                     + ", expires="
                     + expires
                     + ", noActiveExpires="
                     + noActiveExpires
+                    + ", needMailAuth="
+                    + needMailAuth
                     + '}';
+        }
+    }
+
+    @Data
+    public static class Mail {
+        private String address;
+        private String password;
+        private String smtpPort;
+
+        Mail(Toml toml) throws ConfigurationException {
+            this.address = parseString(toml, "mail.address", "");
+            this.password = parseString(toml, "mail.password", "");
+            this.smtpPort = parseString(toml, "mail.smtpPort", "");
+            logger.info("Load mail configuration: " + this);
         }
     }
 

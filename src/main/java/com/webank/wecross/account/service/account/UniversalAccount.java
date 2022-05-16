@@ -24,6 +24,7 @@ public class UniversalAccount {
     @JsonIgnore private Integer id;
 
     private String username;
+    private String email;
     private String uaID;
     private String pubKey;
     private boolean isAdmin;
@@ -281,6 +282,7 @@ public class UniversalAccount {
         UniversalAccountTableBean tableBean = new UniversalAccountTableBean();
         tableBean.setId(id);
         tableBean.setUsername(username);
+        tableBean.setEmail(email);
         tableBean.setUaID(uaID);
         tableBean.setPub(pubKey);
         tableBean.setPassword(password);

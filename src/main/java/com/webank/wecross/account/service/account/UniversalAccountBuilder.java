@@ -65,10 +65,10 @@ public class UniversalAccountBuilder {
      * @return
      * @throws AccountManagerException
      */
-    public static UniversalAccount newUA(String username, String password)
+    public static UniversalAccount newUA(String username, String email, String password)
             throws AccountManagerException {
         String salt = UUID.randomUUID().toString();
-        return newUA(username, password, salt);
+        return newUA(username, email, password, salt);
     }
 
     /**
@@ -78,7 +78,8 @@ public class UniversalAccountBuilder {
      * @return
      * @throws AccountManagerException
      */
-    private static UniversalAccount newUA(String username, String password, String salt)
+    private static UniversalAccount newUA(
+            String username, String email, String password, String salt)
             throws AccountManagerException {
         try {
             List<ChainAccount> chainAccounts = new LinkedList<>();
@@ -91,6 +92,7 @@ public class UniversalAccountBuilder {
             UniversalAccount ua =
                     UniversalAccount.builder()
                             .username(username)
+                            .email(email)
                             .pubKey(pub)
                             .uaID(pub)
                             .role("User")

@@ -15,9 +15,12 @@ public class ImageCodeCreator {
     private static final Logger logger = LoggerFactory.getLogger(ImageCodeCreator.class);
 
     /** Image authentication code validity period */
-    public static final int Image_Auth_Code_Validity_Time = 90;
+    public static final int Image_Auth_Code_Validity_Time = 300;
     /** Image authentication code length */
     public static final int Image_Auth_Code_Char_Number = 4;
+
+    public static final int MAIL_CODE_VALIDITY_TINE = 180; // seconds
+    public static final int MAIL_CODE_LENGTH = 6;
 
     /** */
     private static final char[] CHARS = {
@@ -64,5 +67,27 @@ public class ImageCodeCreator {
         logger.info("new AuthCode, {}", imageAuthCode);
 
         return imageAuthCode;
+    }
+
+    public static MailCode getMailCode() {
+        MailCode mailCode = new MailCode();
+        mailCode.setValidTime(MAIL_CODE_VALIDITY_TINE);
+        mailCode.setCreateTime(LocalDateTime.now());
+        mailCode.setCode(genRandomMailCode(MAIL_CODE_LENGTH));
+
+        logger.info("new mailCode, {}", mailCode);
+        return mailCode;
+    }
+
+    public static String genRandomMailCode(int length) {
+        char[] arr = new char[length];
+        int i = 0;
+        while (i < length) {
+            char ch = (char) (int) (Math.random() * 124);
+            if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9') {
+                arr[i++] = ch;
+            }
+        }
+        return new String(arr);
     }
 }
