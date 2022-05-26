@@ -28,6 +28,8 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultFabricAccountRequest;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultFabricAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
 import com.webank.wecross.account.service.config.ApplicationConfig;
@@ -623,6 +625,69 @@ public class ServiceController {
                             .build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(setDefaultAccountResponse);
+        }
+        return restResponse;
+    }
+
+    private void checkSetDefaultFabricAccountRequest(SetDefaultFabricAccountRequest request)
+            throws RequestParametersException {
+        if (request.getFabricDefault() == null) {
+            throw new RequestParametersException("type has not given");
+        }
+
+        if (request.getKeyID() == null) {
+            throw new RequestParametersException("pubKey has not given");
+        }
+        }
+
+    @RequestMapping(
+            value = "/auth/setDefaultFabricAccount",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object setDefaultFabricAccount(@RequestBody String params) {
+        RestResponse restResponse;
+
+        try {
+
+            SetDefaultFabricAccountRequest setDefaultFabricAccountRequest =
+                    (SetDefaultFabricAccountRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/setDefaultFabricAccount",
+                                            params,
+                                            SetDefaultFabricAccountRequest.class);
+
+            checkSetDefaultFabricAccountRequest(setDefaultFabricAccountRequest);
+
+            Integer keyID = setDefaultFabricAccountRequest.getKeyID();
+            String chainName = setDefaultFabricAccountRequest.getFabricDefault();
+
+            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+            ChainAccount chainAccount = ua.getChainAccountByKeyID(keyID);
+            if (chainAccount == null) {
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountNotExist.getErrorCode(),
+                        "keyID " + keyID.intValue() + " not found");
+            }
+
+            chainAccount.setFabricDefault(chainName); // set
+            ua.setFabricDefault(chainAccount); // set to ua
+            serviceContext.getUaManager().setUA(ua); // update to db
+
+            SetDefaultFabricAccountResponse setDefaultFabricAccountResponse =
+                    SetDefaultFabricAccountResponse.builder().errorCode(0).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setDefaultFabricAccountResponse);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            SetDefaultFabricAccountResponse setDefaultFabricAccountResponse =
+                    SetDefaultFabricAccountResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setDefaultFabricAccountResponse);
         }
         return restResponse;
     }

@@ -33,6 +33,9 @@ public class ChainAccountTableBean {
     @Column(nullable = false)
     private boolean isDefault;
 
+    @Column(nullable = false)
+    private String fabricDefault;
+
     @Column(nullable = false, columnDefinition = "text")
     private String pub;
 

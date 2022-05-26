@@ -47,6 +47,7 @@ public class ChainAccountBuilder {
         account.setIdentity(tableBean.getIdentity());
         account.setUsername(tableBean.getUsername());
         account.setDefault(tableBean.isDefault());
+        account.setFabricDefault(tableBean.getFabricDefault());
 
         account.setPubKey(tableBean.getPub());
         account.setSecKey(tableBean.getSec());
@@ -67,6 +68,7 @@ public class ChainAccountBuilder {
         account.setSecKey(request.getSecKey());
         account.setExt0(request.getExt());
         account.setDefault(request.getIsDefault());
+        account.setFabricDefault(""); // at this time, we assume no fabricDefault is set when adding 
 
         checkSecKey(account.getSecKey());
 

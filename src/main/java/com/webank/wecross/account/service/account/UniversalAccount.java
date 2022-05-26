@@ -167,6 +167,45 @@ public class UniversalAccount {
                 // ca.keyID = chainAccount.keyID;
                 ca.type = chainAccount.type;
                 ca.isDefault = chainAccount.isDefault;
+                ca.fabricDefault = chainAccount.fabricDefault;
+                ca.pubKey = chainAccount.pubKey;
+                ca.secKey = chainAccount.secKey;
+                ca.ext0 = chainAccount.ext0;
+                ca.ext1 = chainAccount.ext1;
+                ca.ext2 = chainAccount.ext2;
+                ca.ext3 = chainAccount.ext3;
+            }
+        }
+    }
+
+    public void setFabricDefault(ChainAccount chainAccount) throws AccountManagerException{
+        if (!isChainAccountExist(chainAccount)) {
+            throw new AccountManagerException(
+                    ErrorCode.ChainAccountNotExist.getErrorCode(), "chain account not exists");
+        }
+
+         // these codes seem no use
+        if (type2ChainAccounts == null) {
+            type2ChainAccounts = new HashMap<>();
+        }
+        type2ChainAccounts.putIfAbsent(chainAccount.getType(), new LinkedHashMap<>());
+        Map<Integer, ChainAccount> chainAccountMap = type2ChainAccounts.get(chainAccount.getType());
+
+        // reset others' fabricdefault if same
+        for (ChainAccount ca : chainAccountMap.values()) {
+            if (ca.equals(chainAccount)) {
+                continue;
+            }
+            
+            if (ca.fabricDefault.equals(chainAccount.fabricDefault)){
+                ca.fabricDefault = "";
+            }
+            if (ca.pubKey.equals(chainAccount.pubKey)) {
+                ca.username = chainAccount.username;
+                // ca.keyID = chainAccount.keyID;
+                ca.type = chainAccount.type;
+                ca.isDefault = chainAccount.isDefault;
+                ca.fabricDefault = chainAccount.fabricDefault;
                 ca.pubKey = chainAccount.pubKey;
                 ca.secKey = chainAccount.secKey;
                 ca.ext0 = chainAccount.ext0;
