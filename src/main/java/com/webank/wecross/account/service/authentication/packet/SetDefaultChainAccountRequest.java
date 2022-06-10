@@ -2,8 +2,8 @@ package com.webank.wecross.account.service.authentication.packet;
 import lombok.Data;
 
 @Data
-public class SetDefaultFabricAccountRequest {
-    private String fabricDefault;
+public class SetDefaultChainAccountRequest {
+    private String chainDefault;
     private Integer keyID; 
     
 }

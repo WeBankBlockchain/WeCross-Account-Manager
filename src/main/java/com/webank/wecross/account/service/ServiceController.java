@@ -28,8 +28,8 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
-import com.webank.wecross.account.service.authentication.packet.SetDefaultFabricAccountRequest;
-import com.webank.wecross.account.service.authentication.packet.SetDefaultFabricAccountResponse;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultChainAccountRequest;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
 import com.webank.wecross.account.service.config.ApplicationConfig;
@@ -629,9 +629,9 @@ public class ServiceController {
         return restResponse;
     }
 
-    private void checkSetDefaultFabricAccountRequest(SetDefaultFabricAccountRequest request)
+    private void checkSetDefaultChainAccountRequest(SetDefaultChainAccountRequest request)
             throws RequestParametersException {
-        if (request.getFabricDefault() == null) {
+        if (request.getChainDefault() == null) {
             throw new RequestParametersException("type has not given");
         }
 
@@ -641,27 +641,27 @@ public class ServiceController {
         }
 
     @RequestMapping(
-            value = "/auth/setDefaultFabricAccount",
+            value = "/auth/setDefaultChainAccount",
             method = RequestMethod.POST,
             produces = "application/json")
-    private Object setDefaultFabricAccount(@RequestBody String params) {
+    private Object setDefaultChainAccount(@RequestBody String params) {
         RestResponse restResponse;
 
         try {
 
-            SetDefaultFabricAccountRequest setDefaultFabricAccountRequest =
-                    (SetDefaultFabricAccountRequest)
+            SetDefaultChainAccountRequest setDefaultChainAccountRequest =
+                    (SetDefaultChainAccountRequest)
                             serviceContext
                                     .getRestRequestFilter()
                                     .fetchRequestObject(
-                                            "/auth/setDefaultFabricAccount",
+                                            "/auth/setDefaultChainAccount",
                                             params,
-                                            SetDefaultFabricAccountRequest.class);
+                                            SetDefaultChainAccountRequest.class);
 
-            checkSetDefaultFabricAccountRequest(setDefaultFabricAccountRequest);
+            checkSetDefaultChainAccountRequest(setDefaultChainAccountRequest);
 
-            Integer keyID = setDefaultFabricAccountRequest.getKeyID();
-            String chainName = setDefaultFabricAccountRequest.getFabricDefault();
+            Integer keyID = setDefaultChainAccountRequest.getKeyID();
+            String chainName = setDefaultChainAccountRequest.getChainDefault();
 
             UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
             ChainAccount chainAccount = ua.getChainAccountByKeyID(keyID);
@@ -671,23 +671,23 @@ public class ServiceController {
                         "keyID " + keyID.intValue() + " not found");
             }
 
-            chainAccount.setFabricDefault(chainName); // set
-            ua.setFabricDefault(chainAccount); // set to ua
+            chainAccount.setChainDefault(chainName); // set
+            ua.setChainDefault(chainAccount); // set to ua
             serviceContext.getUaManager().setUA(ua); // update to db
 
-            SetDefaultFabricAccountResponse setDefaultFabricAccountResponse =
-                    SetDefaultFabricAccountResponse.builder().errorCode(0).message("success").build();
+            SetDefaultChainAccountResponse setDefaultChainAccountResponse =
+                    SetDefaultChainAccountResponse.builder().errorCode(0).message("success").build();
             restResponse = RestResponse.newSuccess();
-            restResponse.setData(setDefaultFabricAccountResponse);
+            restResponse.setData(setDefaultChainAccountResponse);
         } catch (Exception e) {
             logger.error("e: ", e);
-            SetDefaultFabricAccountResponse setDefaultFabricAccountResponse =
-                    SetDefaultFabricAccountResponse.builder()
+            SetDefaultChainAccountResponse setDefaultChainAccountResponse =
+                    SetDefaultChainAccountResponse.builder()
                             .errorCode(1)
                             .message(e.getMessage())
                             .build();
             restResponse = RestResponse.newSuccess();
-            restResponse.setData(setDefaultFabricAccountResponse);
+            restResponse.setData(setDefaultChainAccountResponse);
         }
         return restResponse;
     }
