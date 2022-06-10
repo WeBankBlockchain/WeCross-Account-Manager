@@ -57,7 +57,7 @@ public class ChainAccount {
         isDefault = aDefault;
     }
 
-    @JsonGetter("cahinDefault")
+    @JsonGetter("chainDefault")
     public String getChainDefault(){
         return chainDefault;
     }
