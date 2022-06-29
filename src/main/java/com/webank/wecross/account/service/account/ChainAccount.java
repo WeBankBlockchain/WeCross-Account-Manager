@@ -15,6 +15,7 @@ public class ChainAccount {
     protected String identity;
     protected String type;
     protected boolean isDefault;
+    protected String chainDefault;
     protected String pubKey;
     protected String secKey;
     protected String ext0;
@@ -56,6 +57,15 @@ public class ChainAccount {
         isDefault = aDefault;
     }
 
+    @JsonGetter("chainDefault")
+    public String getChainDefault(){
+        return chainDefault;
+    }
+
+    public void setChainDefault(String chainName){
+        chainDefault = chainName;
+    }
+
     public ChainAccountTableBean toTableBean() {
         ChainAccountTableBean tableBean = new ChainAccountTableBean();
         tableBean.setId(id);
@@ -65,6 +75,7 @@ public class ChainAccount {
         tableBean.setIdentityDetail(getIdentityDetail());
         tableBean.setType(type);
         tableBean.setDefault(isDefault);
+        tableBean.setChainDefault(chainDefault);
         tableBean.setPub(pubKey);
         tableBean.setSec(secKey);
         tableBean.setExt0(ext0);
@@ -132,6 +143,9 @@ public class ChainAccount {
         @JsonProperty("isDefault")
         protected boolean isDefault;
 
+        @JsonProperty("chainDefault")
+        protected String chainDefault;
+
         protected String pubKey;
         protected String secKey;
         protected String ext0;
@@ -147,6 +161,7 @@ public class ChainAccount {
                 .identity(identity)
                 .type(type)
                 .isDefault(isDefault)
+                .chainDefault(chainDefault)
                 .pubKey(pubKey)
                 .secKey(secKey)
                 .ext0(ext0)

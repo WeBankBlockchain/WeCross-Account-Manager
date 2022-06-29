@@ -28,6 +28,8 @@ import com.webank.wecross.account.service.authentication.packet.RemoveChainAccou
 import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
 import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultChainAccountRequest;
+import com.webank.wecross.account.service.authentication.packet.SetDefaultChainAccountResponse;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
 import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
 import com.webank.wecross.account.service.config.ApplicationConfig;
@@ -623,6 +625,69 @@ public class ServiceController {
                             .build();
             restResponse = RestResponse.newSuccess();
             restResponse.setData(setDefaultAccountResponse);
+        }
+        return restResponse;
+    }
+
+    private void checkSetDefaultChainAccountRequest(SetDefaultChainAccountRequest request)
+            throws RequestParametersException {
+        if (request.getChainDefault() == null) {
+            throw new RequestParametersException("type has not given");
+        }
+
+        if (request.getKeyID() == null) {
+            throw new RequestParametersException("pubKey has not given");
+        }
+        }
+
+    @RequestMapping(
+            value = "/auth/setDefaultChainAccount",
+            method = RequestMethod.POST,
+            produces = "application/json")
+    private Object setDefaultChainAccount(@RequestBody String params) {
+        RestResponse restResponse;
+
+        try {
+
+            SetDefaultChainAccountRequest setDefaultChainAccountRequest =
+                    (SetDefaultChainAccountRequest)
+                            serviceContext
+                                    .getRestRequestFilter()
+                                    .fetchRequestObject(
+                                            "/auth/setDefaultChainAccount",
+                                            params,
+                                            SetDefaultChainAccountRequest.class);
+
+            checkSetDefaultChainAccountRequest(setDefaultChainAccountRequest);
+
+            Integer keyID = setDefaultChainAccountRequest.getKeyID();
+            String chainName = setDefaultChainAccountRequest.getChainDefault();
+
+            UniversalAccount ua = serviceContext.getUaManager().getCurrentLoginUA();
+            ChainAccount chainAccount = ua.getChainAccountByKeyID(keyID);
+            if (chainAccount == null) {
+                throw new AccountManagerException(
+                        ErrorCode.ChainAccountNotExist.getErrorCode(),
+                        "keyID " + keyID.intValue() + " not found");
+            }
+
+            chainAccount.setChainDefault(chainName); // set
+            ua.setChainDefault(chainAccount); // set to ua
+            serviceContext.getUaManager().setUA(ua); // update to db
+
+            SetDefaultChainAccountResponse setDefaultChainAccountResponse =
+                    SetDefaultChainAccountResponse.builder().errorCode(0).message("success").build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setDefaultChainAccountResponse);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            SetDefaultChainAccountResponse setDefaultChainAccountResponse =
+                    SetDefaultChainAccountResponse.builder()
+                            .errorCode(1)
+                            .message(e.getMessage())
+                            .build();
+            restResponse = RestResponse.newSuccess();
+            restResponse.setData(setDefaultChainAccountResponse);
         }
         return restResponse;
     }
