@@ -42,7 +42,7 @@ LOG_FALT() {
 
 check_env() {
     [ ! -z "$(openssl version | grep 1.0.2)" ] || [ ! -z "$(openssl version | grep 1.1)" ] || [ ! -z "$(openssl version | grep reSSL)" ] || {
-        LOG_ERROR "Please install openssl!"
+        LOG_FALT "Please install openssl!"
         #echo "download openssl from https://www.openssl.org."
         LOG_INFO "Use \"openssl version\" command to check."
         exit 1
