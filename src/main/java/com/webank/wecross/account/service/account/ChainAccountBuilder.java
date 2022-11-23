@@ -73,20 +73,14 @@ public class ChainAccountBuilder {
         String type = request.getType();
         switch (type) {
             case Default.BCOS_STUB_TYPE:
-                checkPubKey(request.getPubKey());
-                checkAddressFormat(request.getExt());
-                account.setIdentity(request.getExt());
-                break;
             case Default.BCOS_GM_STUB_TYPE:
+            case Default.BCOS_3_STUB_TYPE:
+            case Default.BCOS_3_GM_STUB_TYPE:
                 checkPubKey(request.getPubKey());
                 checkAddressFormat(request.getExt());
                 account.setIdentity(request.getExt());
                 break;
             case Default.FABRIC_STUB_TYPE:
-                checkCertificatePem(request.getPubKey());
-                checkMSPID(request.getExt());
-                account.setIdentity(request.getPubKey());
-                break;
             case Default.FABRIC_STUB_TYPE2:
                 checkCertificatePem(request.getPubKey());
                 checkMSPID(request.getExt());
