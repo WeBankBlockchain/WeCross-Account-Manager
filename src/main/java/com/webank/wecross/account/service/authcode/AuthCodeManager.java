@@ -13,7 +13,9 @@ public class AuthCodeManager {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthCodeManager.class);
 
+    private boolean needMailAuth = false;
     private final Map<String, AuthCode> authCodeMap = new ConcurrentHashMap<>();
+    private final Map<String, MailCode> mailCodeMap = new ConcurrentHashMap<>();
     private boolean allowImageAuthCodeEmpty = true;
     private ScheduledExecutorService scheduledExecutorService = null;
 
@@ -38,6 +40,16 @@ public class AuthCodeManager {
                 authCodeMap.remove(key);
             }
         }
+
+        for (Map.Entry<String, MailCode> entry : mailCodeMap.entrySet()) {
+            String key = entry.getKey();
+            MailCode mailCode = entry.getValue();
+            if (mailCode.isExpired()) {
+                logger.info("clear expired mailCode for register, token: {}", entry.getKey());
+                mailCodeMap.remove(key);
+            }
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug(" do cleanExpiredTokens ");
         }
@@ -94,6 +106,31 @@ public class AuthCodeManager {
         removeAuthCode(randomToken);
     }
 
+    public void authMailCode(String username, String code) throws AccountManagerException {
+        if (!isNeedMailAuth()) {
+            return;
+        }
+
+        MailCode mailCode = mailCodeMap.get(username);
+        if (mailCode == null) {
+            throw new AccountManagerException(
+                    ErrorCode.ImageAuthTokenNotExist.getErrorCode(), "mail code not found");
+        }
+
+        if (mailCode.isExpired()) {
+            mailCodeMap.remove(username);
+            throw new AccountManagerException(
+                    ErrorCode.ImageAuthTokenExpired.getErrorCode(), "mail code token has expired");
+        }
+
+        if (!mailCode.getCode().equalsIgnoreCase(code)) {
+            mailCodeMap.remove(username);
+            throw new AccountManagerException(
+                    ErrorCode.ImageAuthTokenNotMatch.getErrorCode(), "mail code does not match");
+        }
+        mailCodeMap.remove(username);
+    }
+
     public void addAuthCode(AuthCode authCode) {
         authCodeMap.put(authCode.getToken(), authCode);
         if (logger.isDebugEnabled()) {
@@ -116,11 +153,30 @@ public class AuthCodeManager {
         }
     }
 
+    public void addMailCode(String username, MailCode mailCode) {
+        if (!isNeedMailAuth()) {
+            return;
+        }
+
+        mailCodeMap.put(username, mailCode);
+        if (logger.isDebugEnabled()) {
+            logger.debug("add mailCode: {}", mailCode);
+        }
+    }
+
     public boolean isAllowImageAuthCodeEmpty() {
         return allowImageAuthCodeEmpty;
     }
 
     public void setAllowImageAuthCodeEmpty(boolean allowImageAuthCodeEmpty) {
         this.allowImageAuthCodeEmpty = allowImageAuthCodeEmpty;
+    }
+
+    public boolean isNeedMailAuth() {
+        return needMailAuth;
+    }
+
+    public void setNeedMailAuth(boolean needMailAuth) {
+        this.needMailAuth = needMailAuth;
     }
 }

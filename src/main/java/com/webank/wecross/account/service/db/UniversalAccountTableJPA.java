@@ -9,4 +9,6 @@ public interface UniversalAccountTableJPA
 
     @Query(value = "select ua.tokenSec from UniversalAccountTableBean ua where ua.username=?1")
     String findTokenSecByUsername(String username);
+
+    Boolean existsByEmail(String email);
 }

@@ -35,6 +35,20 @@ public class UAManager {
         return Objects.nonNull(universalAccountTableJPA.findByUsername(username));
     }
 
+    public boolean isEmailExist(String email) {
+        return universalAccountTableJPA.existsByEmail(email);
+    }
+
+    public String getEmail(String username) throws AccountManagerException {
+        UniversalAccountTableBean universalAccountTableBean =
+                universalAccountTableJPA.findByUsername(username);
+        if (universalAccountTableBean == null) {
+            throw new AccountManagerException(
+                    ErrorCode.UAAccountNotExist.getErrorCode(), "User not found: " + username);
+        }
+        return universalAccountTableBean.getEmail();
+    }
+
     public UniversalAccount getUA(String username) throws AccountManagerException {
         UniversalAccountTableBean universalAccountTableBean =
                 universalAccountTableJPA.findByUsername(username);
@@ -177,7 +191,7 @@ public class UAManager {
             if (e.getErrorCode() == ErrorCode.UAAccountNotExist.getErrorCode()) {
                 // not found
                 logger.info("AdminUA not found. Generate: {}", username);
-                admin = UniversalAccountBuilder.newUA(username, password);
+                admin = UniversalAccountBuilder.newUA(username, "", password);
                 setUA(admin);
                 logger.info("AdminUA generate success!");
             }

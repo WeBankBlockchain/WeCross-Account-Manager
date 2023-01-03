@@ -117,6 +117,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             // check randomToken and imageAuthCode
             authCodeManager.authToken(randomToken, authCode);
 
+            if (!username.equals(uaManager.getAdminName())) {
+                authCodeManager.authMailCode(username, loginRequest.getMailCode());
+            }
+
             UniversalAccount ua = uaManager.getUA(username);
 
             logger.info("login username: {}", username);
