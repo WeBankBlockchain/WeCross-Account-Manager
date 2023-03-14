@@ -12,7 +12,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -65,12 +65,11 @@ public class RSAUtility {
         PemObject pemObject = pemReader.readPemObject();
         byte[] pemContent = pemObject.getContent();
         RSAPrivateKey rsaPrivateKey =
-                RSAPrivateKey.getInstance((ASN1Sequence) ASN1Sequence.fromByteArray(pemContent));
+                RSAPrivateKey.getInstance(ASN1Primitive.fromByteArray(pemContent));
         RSAPrivateKeySpec rsaPrivateKeySpec =
                 new RSAPrivateKeySpec(
                         rsaPrivateKey.getModulus(), rsaPrivateKey.getPrivateExponent());
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey privateKey = keyFactory.generatePrivate(rsaPrivateKeySpec);
-        return privateKey;
+        return keyFactory.generatePrivate(rsaPrivateKeySpec);
     }
 }
