@@ -27,9 +27,9 @@ repositories {
 }
 
 sourceCompatibility = 1.8
-version '1.2.1'
+version '1.3.0'
 
-def log4j_version="2.17.2"
+def log4j_version="2.19.0"
 List logger = [
         "org.apache.logging.log4j:log4j-api:$log4j_version",
         "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
@@ -40,7 +40,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
     
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
     compile 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile 'org.springframework.boot:spring-boot-starter-web:2.6.7'
@@ -149,4 +149,8 @@ jacocoTestReport {
         xml.enabled true
         html.enabled false
     }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
