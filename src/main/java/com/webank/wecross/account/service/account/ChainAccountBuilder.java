@@ -71,30 +71,18 @@ public class ChainAccountBuilder {
         checkSecKey(account.getSecKey());
 
         String type = request.getType();
-        switch (type) {
-            case Default.BCOS_STUB_TYPE:
-                checkPubKey(request.getPubKey());
-                checkAddressFormat(request.getExt());
-                account.setIdentity(request.getExt());
-                break;
-            case Default.BCOS_GM_STUB_TYPE:
-                checkPubKey(request.getPubKey());
-                checkAddressFormat(request.getExt());
-                account.setIdentity(request.getExt());
-                break;
-            case Default.FABRIC_STUB_TYPE:
-                checkCertificatePem(request.getPubKey());
-                checkMSPID(request.getExt());
-                account.setIdentity(request.getPubKey());
-                break;
-            case Default.FABRIC_STUB_TYPE2:
-                checkCertificatePem(request.getPubKey());
-                checkMSPID(request.getExt());
-                account.setIdentity(request.getPubKey());
-                break;
-            default:
-                logger.error("request unknown ChainAccount type: {}", type);
-                throw new RequestParametersException("Unknown ChainAccount type: " + type);
+        if (!Default.SUPPORT_STUB_TYPE.contains(type)) {
+            logger.error("request unknown ChainAccount type: {}", type);
+            throw new RequestParametersException("Unknown ChainAccount type: " + type);
+        }
+        if (type.contains(Default.BCOS_STUB_KEY_WORD)) {
+            checkPubKey(request.getPubKey());
+            checkAddressFormat(request.getExt());
+            account.setIdentity(request.getExt());
+        } else if (type.contains(Default.FABRIC_STUB_KEY_WORD)) {
+            checkCertificatePem(request.getPubKey());
+            checkMSPID(request.getExt());
+            account.setIdentity(request.getPubKey());
         }
 
         return account;

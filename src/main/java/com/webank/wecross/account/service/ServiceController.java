@@ -7,29 +7,10 @@ import com.webank.wecross.account.service.account.LoginSalt;
 import com.webank.wecross.account.service.account.UAManager;
 import com.webank.wecross.account.service.account.UniversalAccount;
 import com.webank.wecross.account.service.account.UniversalAccountBuilder;
-import com.webank.wecross.account.service.authcode.AuthCode;
-import com.webank.wecross.account.service.authcode.AuthCodeManager;
-import com.webank.wecross.account.service.authcode.ImageCodeCreator;
-import com.webank.wecross.account.service.authcode.RSAKeyPairManager;
+import com.webank.wecross.account.service.authcode.*;
 import com.webank.wecross.account.service.authentication.JwtManager;
 import com.webank.wecross.account.service.authentication.JwtToken;
-import com.webank.wecross.account.service.authentication.packet.AddChainAccountRequest;
-import com.webank.wecross.account.service.authentication.packet.AddChainAccountResponse;
-import com.webank.wecross.account.service.authentication.packet.AuthCodeResponse;
-import com.webank.wecross.account.service.authentication.packet.ChangePasswordRequest;
-import com.webank.wecross.account.service.authentication.packet.LoginRequest;
-import com.webank.wecross.account.service.authentication.packet.LoginResponse;
-import com.webank.wecross.account.service.authentication.packet.LogoutResponse;
-import com.webank.wecross.account.service.authentication.packet.ModifyPasswordResponse;
-import com.webank.wecross.account.service.authentication.packet.PubResponse;
-import com.webank.wecross.account.service.authentication.packet.RegisterRequest;
-import com.webank.wecross.account.service.authentication.packet.RegisterResponse;
-import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountRequest;
-import com.webank.wecross.account.service.authentication.packet.RemoveChainAccountResponse;
-import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountRequest;
-import com.webank.wecross.account.service.authentication.packet.SetDefaultAccountResponse;
-import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLRequest;
-import com.webank.wecross.account.service.authentication.packet.SetUniversalAccountACLResponse;
+import com.webank.wecross.account.service.authentication.packet.*;
 import com.webank.wecross.account.service.config.ApplicationConfig;
 import com.webank.wecross.account.service.crypto.CryptoRSABase64Impl;
 import com.webank.wecross.account.service.exception.AccountManagerException;
@@ -38,16 +19,17 @@ import com.webank.wecross.account.service.exception.RequestParametersException;
 import com.webank.wecross.account.service.utils.PassWordUtility;
 import com.webank.wecross.account.service.utils.Path;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.UUID;
 import javax.annotation.Resource;
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ServiceController {
@@ -87,6 +69,15 @@ public class ServiceController {
     }
 
     private void checkRegisterRequest(RegisterRequest request) throws AccountManagerException {
+        if (serviceContext.getAuthCodeManager().isNeedMailAuth()) {
+            if (request.getEmail() == null) {
+                throw new RequestParametersException("email has not given");
+            }
+            if (request.getMailCode() == null) {
+                throw new RequestParametersException("mail code has not given");
+            }
+        }
+
         if (request.getUsername() == null) {
             throw new RequestParametersException("username has not given");
         }
@@ -216,7 +207,7 @@ public class ServiceController {
                     logger.info("routerLogin username: {} not found and will create it", username);
                     String password = applicationConfig.getExt().getRouterLoginAccountPassword();
                     String confusedPassword = DigestUtils.sha256Hex(LoginSalt.LoginSalt + password);
-                    ua = UniversalAccountBuilder.newUA(username, confusedPassword);
+                    ua = UniversalAccountBuilder.newUA(username, "", confusedPassword);
                     uaManager.setUA(ua);
                 } else {
                     throw accountManagerException;
@@ -285,6 +276,8 @@ public class ServiceController {
             AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
             authCodeManager.authToken(randomToken, authCode);
 
+            authCodeManager.authMailCode(username, registerRequest.getMailCode());
+
             UAManager uaManager = serviceContext.getUaManager();
             if (uaManager.isUAExist(username)) {
                 throw new AccountManagerException(
@@ -292,7 +285,14 @@ public class ServiceController {
                         "user '" + username + "' has already been registered");
             }
 
-            UniversalAccount newUA = UniversalAccountBuilder.newUA(username, password);
+            String email = registerRequest.getEmail();
+            if (authCodeManager.isNeedMailAuth() && uaManager.isEmailExist(email)) {
+                throw new AccountManagerException(
+                        ErrorCode.AccountExist.getErrorCode(),
+                        "email address has been registered: " + email);
+            }
+
+            UniversalAccount newUA = UniversalAccountBuilder.newUA(username, email, password);
 
             uaManager.setUA(newUA);
 
@@ -777,5 +777,80 @@ public class ServiceController {
             restResponse.setData(setUniversalAccountACLResponse);
         }
         return restResponse;
+    }
+
+    @GetMapping("/auth/need-mail-auth")
+    private RestResponse isNeedMailAuth() {
+        RestResponse restResponse = RestResponse.newSuccess();
+        restResponse.setData(serviceContext.getAuthCodeManager().isNeedMailAuth());
+        return restResponse;
+    }
+
+    @PostMapping("/auth/mail-code")
+    private RestResponse sendMailCode(@RequestBody String params) throws Exception {
+        if (!serviceContext.getAuthCodeManager().isNeedMailAuth()) {
+            return RestResponse.newFailed("Please turn on mail authentication");
+        }
+
+        MailCodeRequest mailCodeRequest =
+                (MailCodeRequest)
+                        serviceContext
+                                .getRestRequestFilter()
+                                .fetchRequestObject(
+                                        "/auth/mail-code", params, MailCodeRequest.class);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("invitationCode request params: {}", mailCodeRequest);
+        }
+
+        String senderAddress = applicationConfig.getMail().getAddress();
+        String senderPassword = applicationConfig.getMail().getPassword();
+        String mailPort = applicationConfig.getMail().getSmtpPort();
+
+        String toAddress = mailCodeRequest.getEmail();
+        String username = mailCodeRequest.getUsername();
+        if (Objects.isNull(toAddress) || toAddress.trim().equals("")) {
+
+            toAddress = serviceContext.getUaManager().getEmail(username);
+        }
+
+        if (Objects.isNull(toAddress) || toAddress.trim().equals("")) {
+            throw new AccountManagerException(
+                    ErrorCode.MailNotFound.getErrorCode(), "mail address not found: " + username);
+        }
+
+        Properties props = System.getProperties();
+
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.host", "smtp.qq.com");
+        props.put("mail.smtp.port", mailPort);
+
+        Session session =
+                Session.getDefaultInstance(
+                        props,
+                        new Authenticator() {
+                            public PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(senderAddress, senderPassword);
+                            }
+                        });
+
+        MimeMessage mimeMessage = new MimeMessage(session);
+        mimeMessage.setFrom(new InternetAddress(senderAddress));
+        mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
+        mimeMessage.setSubject("WeCross平台验证码");
+
+        AuthCodeManager authCodeManager = serviceContext.getAuthCodeManager();
+        MailCode mailCode = ImageCodeCreator.getMailCode();
+        authCodeManager.addMailCode(username, mailCode);
+
+        mimeMessage.setText(
+                "尊敬的用户: \n    您的验证码为: "
+                        + mailCode.getCode()
+                        + "，"
+                        + ImageCodeCreator.MAIL_CODE_VALIDITY_TINE / 60
+                        + "分钟内有效。\n    本邮件由系统自动发送，请勿直接回复。");
+        Transport.send(mimeMessage);
+
+        return RestResponse.newSuccess();
     }
 }

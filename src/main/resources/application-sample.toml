@@ -15,6 +15,15 @@
     name = 'org1'
     expires = 18000 # 5 h
     noActiveExpires = 600 # 10 min
+    needMailAuth = false
+
+# if needMailAuth = true
+[mail]
+    # address for sending email code, must be qq email
+    # Should open qq mail sftp, view at https://blog.51cto.com/lawsonabs/3001832
+    address = '12345678@qq.com'
+    password = 'qq12345678'
+    smtpPort = '587'
 
 [encrypt]
     # for http request data encrypt

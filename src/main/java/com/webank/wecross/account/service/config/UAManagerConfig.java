@@ -84,6 +84,7 @@ public class UAManagerConfig {
         ApplicationConfig.Ext ext = applicationConfig.getExt();
         AuthCodeManager authCodeManager = new AuthCodeManager(scheduledExecutorService);
         authCodeManager.setAllowImageAuthCodeEmpty(ext.isAllowImageAuthCodeEmpty());
+        authCodeManager.setNeedMailAuth(applicationConfig.getAuth().isNeedMailAuth());
         return authCodeManager;
     }
 

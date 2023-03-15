@@ -19,6 +19,8 @@ public enum ErrorCode {
     ChainAccountHasBeenModified(40015),
     UAHasBeenModified(40016),
     InvalidPathFormat(40017),
+    AccountExist(40018),
+    MailNotFound(40019),
     UndefinedError(40099);
 
     private int errorCode;

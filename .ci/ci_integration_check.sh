@@ -31,7 +31,7 @@ config()
     LOG_INFO "Create RSA keypair"
     # generate rsa_keypair
     cd ${DIST}
-    bash create_rsa_keypair.sh -d conf/
+    bash -x create_rsa_keypair.sh -d conf/
 
     LOG_INFO "Configure application.toml"
     cd ${DIST}/conf
@@ -41,7 +41,9 @@ config()
     sed_i 's/true/false/g' application.toml
     sed_i "/password/s/''/'${DB_PASSWORD}'/g" application.toml
     cat application.toml
+    openssl genrsa -help
     ls -al *
+    cat rsa*
 
     LOG_INFO "Configure application.properties"
     

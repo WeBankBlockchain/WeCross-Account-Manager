@@ -25,6 +25,8 @@ public class UniversalAccountTableBean {
     @Column(nullable = false, unique = true, columnDefinition = "text")
     private String pub;
 
+    private String email;
+
     // secret
     @Column(nullable = false)
     private String password;

@@ -41,8 +41,8 @@ LOG_FALT() {
 }
 
 check_env() {
-    [ ! -z "$(openssl version | grep 1.0.2)" ] || [ ! -z "$(openssl version | grep 1.1)" ] || [ ! -z "$(openssl version | grep reSSL)" ] || {
-        LOG_ERROR "Please install openssl!"
+    [ ! -z "$(openssl version | grep 1.0.2)" ] || [ ! -z "$(openssl version | grep 1.1)" ] || [ ! -z "$(openssl version | grep '3.')" ] || [ ! -z "$(openssl version | grep reSSL)" ] || {
+        LOG_FALT "Please install openssl!"
         #echo "download openssl from https://www.openssl.org."
         LOG_INFO "Use \"openssl version\" command to check."
         exit 1
@@ -101,7 +101,12 @@ gen_rsa_keypair() {
     file_must_not_exists "${target_dir}"/${private_name}
     file_must_not_exists "${target_dir}"/${public_name}
 
-    openssl genrsa -out "${target_dir}"/"${private_name}" 4096
+    local compatibility_flag=''
+    if [[ ! -z "$(openssl version | grep '3.0')" ]]; then
+      compatibility_flag='-traditional'
+    fi
+
+    openssl genrsa ${compatibility_flag} -out "${target_dir}"/"${private_name}" 4096
     openssl rsa -in "${target_dir}"/"${private_name}" -out "${target_dir}"/"${public_name}" -pubout
 
     LOG_INFO "Build rsa keypair successfully!"
