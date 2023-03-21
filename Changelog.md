@@ -11,6 +11,10 @@
 
 * 修复`create_rsa_keypair.sh`脚本在openssl3.+版本下的问题
 
+**更新**
+
+* 更新gson、bouncycastle、netty、spring-boot-starter、mysql-connector、h2database的版本号，以修复安全问题。
+
 ### v1.2.1
 
 (2021-12-15)
