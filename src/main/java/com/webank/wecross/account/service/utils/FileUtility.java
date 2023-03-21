@@ -16,7 +16,8 @@ public class FileUtility {
     public static String readFileContent(String fileName) throws ConfigurationException {
         try {
             Path path;
-
+            // to avoid path manipulation
+            fileName = fileName.replace("..", "");
             if (fileName.indexOf("classpath:") != 0) {
                 path = Paths.get(fileName);
             } else {
