@@ -303,10 +303,7 @@ public class ApplicationConfig {
             }
 
             if (this.password.length() >= 256) {
-                throw new ConfigurationException(
-                        "admin.password(length:"
-                                + this.password.length()
-                                + ") must smaller than 256");
+                throw new ConfigurationException("admin.password must smaller than 256");
             }
 
             logger.info("Load configuration: " + this.username);
