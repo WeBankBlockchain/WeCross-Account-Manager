@@ -83,6 +83,8 @@ public class ChainAccountBuilder {
             checkCertificatePem(request.getPubKey());
             checkMSPID(request.getExt());
             account.setIdentity(request.getPubKey());
+        } else {
+            account.setIdentity(request.getPubKey());
         }
 
         return account;
