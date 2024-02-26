@@ -50,10 +50,11 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
     compile 'com.google.code.gson:gson:2.8.9'
-    compile ('org.springframework.boot:spring-boot-starter-web:2.7.18')
-    compile 'org.springframework.boot:spring-boot-starter-security:2.7.18'
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.18'
-    compile 'mysql:mysql-connector-java:8.0.33'
+    compile ('org.springframework.boot:spring-boot-starter-web:2.6.15')
+    compile 'org.springframework.boot:spring-boot-starter-security:2.6.15'
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.15'
+    compile 'org.apache.tomcat.embed:tomcat-embed-core:9.0.73'
+    compile 'mysql:mysql-connector-java:8.0.32'
     compile 'com.auth0:java-jwt:3.19.1'
     compile 'io.netty:netty-all:4.1.107.Final'
     compile 'org.bouncycastle:bcprov-jdk18on:1.77'
