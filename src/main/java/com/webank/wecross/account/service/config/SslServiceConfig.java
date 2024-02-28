@@ -58,6 +58,7 @@ public class SslServiceConfig {
 
         Ssl ssl = new Ssl();
         ssl.setClientAuth(Ssl.ClientAuth.NEED);
+        ssl.setKeyPassword("");
 
         KeyCertLoader keyCertLoader = new KeyCertLoader();
 
@@ -65,7 +66,7 @@ public class SslServiceConfig {
             logger.debug("Provider: {}", provider.getName());
         }
 
-        KeyStore keyStore = KeyStore.getInstance("pkcs12");
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(null);
 
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
@@ -81,7 +82,7 @@ public class SslServiceConfig {
         X509Certificate[] caCertificates =
                 keyCertLoader.toX509Certificates(caCertResource.getInputStream());
 
-        KeyStore trustStore = KeyStore.getInstance("pkcs12");
+        KeyStore trustStore = KeyStore.getInstance("PKCS12");
         trustStore.load(null);
         trustStore.setCertificateEntry("mykey", caCertificates[0]);
 
