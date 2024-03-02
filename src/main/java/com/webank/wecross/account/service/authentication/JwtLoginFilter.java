@@ -178,7 +178,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             jwtManager.setTokenActive(jwtToken); // active it during login
             String tokenStr = jwtToken.getTokenStrWithPrefix(); // with prefix
 
-            logger.info("Login success: username:{} credential:{}", username, tokenStr);
+            logger.info("Login success: username:{}", username);
 
             response.setCharacterEncoding("UTF-8");
             response.setContentType("text/json;charset=utf-8");
@@ -213,7 +213,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             HttpServletResponse response,
             AuthenticationException failed)
             throws IOException, ServletException {
-        logger.info("Login failed: {}", failed);
+        logger.info("Login failed", failed);
 
         LoginResponse loginResponse =
                 LoginResponse.builder()
