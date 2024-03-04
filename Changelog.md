@@ -1,3 +1,12 @@
+### v1.4.0
+
+(2024-03-01)
+
+**更改**
+
+- 更改account manager对链类型的强校验，支持链类型的动态扩展 https://github.com/WeBankBlockchain/WeCross-Account-Manager/pull/89
+- 更新版本依赖，修复安全问题 https://github.com/WeBankBlockchain/WeCross-Account-Manager/pull/90 https://github.com/WeBankBlockchain/WeCross-Account-Manager/pull/92
+
 ### v1.3.1
 
 (2023-07-31)
